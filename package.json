@@ -9,7 +9,18 @@
     "test": "turbo test"
   },
   "devDependencies": {
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "turbo": "^2.0.6"
   },
-  "packageManager": "pnpm@9.0.6"
+  "packageManager": "pnpm@9.0.6",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.1",
+    "@types/bcrypt": "^6.0.0",
+    "bcrypt": "^6.0.0",
+    "drizzle-kit": "^0.31.4",
+    "drizzle-orm": "^0.44.5",
+    "next-auth": "^4.24.11",
+    "pg": "^8.16.3",
+    "zod": "^4.1.8"
+  }
 }
