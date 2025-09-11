@@ -1,0 +1,16 @@
+- [x] **Story 3.1: Stripe Product & Pricing Setup**
+  - [x] Configure the product and pricing plans in the Stripe Dashboard.
+- [x] **Story 3.2: Create Stripe Checkout Session API**
+  - [x] Create a new API route at `/api/stripe/create-checkout-session`.
+- [x] **Story 3.3: Implement Pricing Page & Upgrade Flow**
+  - [x] Create a new `/pricing` page.
+  - [x] Connect the "Upgrade" button to the checkout session API.
+- [x] **Story 3.4: Implement Stripe Webhooks for Subscription Status**
+  - [x] Create a new API route at `/api/stripe/webhook`.
+  - [x] Handle the `checkout.session.completed` event.
+- [x] **Story 3.5: Implement Freemium Usage Gating**
+  - [x] Track the number of queries per user.
+  - [x] Return an error when the limit is exceeded for free users.
+- [x] **Story 3.6: Implement Production-Grade Monitoring**
+  - [x] Create a health-check API endpoint at `/api/health`.
+  - [x] Configure Sentry for error reporting.

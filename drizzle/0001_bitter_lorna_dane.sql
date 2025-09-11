@@ -1,0 +1,1 @@
+ALTER TABLE "pricecontrol_user" ADD COLUMN "password_hash" text;

@@ -1,0 +1,8 @@
+- id: "sec-edgar"
+  name: "SEC EDGAR API"
+  url: "https://www.sec.gov/edgar/searchedgar/companysearch"
+  terms_of_use: "https://www.sec.gov/os/website-policies-and-notices#security"
+- id: "alpha-vantage"
+  name: "Alpha Vantage API"
+  url: "https://www.alphavantage.co/"
+  terms_of_use: "https://www.alphavantage.co/terms_of_service/"
