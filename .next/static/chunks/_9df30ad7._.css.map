@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["file:///home/kannan/PriceControl-AI2/src/styles/globals.css"],"sourcesContent":["html,\nbody {\n  padding: 0;\n  margin: 0;\n  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,\n    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;\n}\n\na {\n  color: inherit;\n  text-decoration: none;\n}\n\n* {\n  box-sizing: border-box;\n}\n"],"names":[],"mappings":"AAAA;;;;;;AAQA;;;;;AAKA","debugId":null}},
-    {"offset": {"line": 17, "column": 0}, "map": {"version":3,"sources":["file:///home/kannan/PriceControl-AI2/node_modules/geist/dist/geistsans_d5a4f12f.module.css"],"sourcesContent":["@font-face {\n    font-family: 'GeistSans';\n    src: url('@vercel/turbopack-next/internal/font/local/font?{%22path%22:%22./fonts/geist-sans/Geist-Variable.woff2%22,%22preload%22:true,%22has_size_adjust%22:true}') format('woff2');\n    font-display: swap;\n    font-weight: 100 900;\n}\n\n@font-face {\n    font-family: 'GeistSans Fallback';\n    src: local(\"Arial\");\n    ascent-override: 85.83%;\ndescent-override: 20.53%;\nline-gap-override: 9.33%;\nsize-adjust: 107.19%;\n\n}\n\n.className {\n    font-family: 'GeistSans', 'GeistSans Fallback';\n    \n}\n.variable {\n    --font-geist-sans: 'GeistSans', 'GeistSans Fallback';\n}\n\n"],"names":[],"mappings":"AAAA;;;;;;;AAOA;;;;;;;;;AAUA;;;;AAIA","ignoreList":[0],"debugId":null}}]
-}

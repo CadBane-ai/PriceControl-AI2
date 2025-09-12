@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///home/kannan/PriceControl-AI2/src/app/_components/SessionProvider.tsx"],"sourcesContent":["\"use client\";\n\nimport { SessionProvider } from \"next-auth/react\";\n\nexport default function AppSessionProvider({\n  children,\n}: {\n  children: React.ReactNode;\n}) {\n  return <SessionProvider>{children}</SessionProvider>;\n}"],"names":[],"mappings":";;;;;AAEA;AAFA;;;AAIe,SAAS,mBAAmB,KAI1C;QAJ0C,EACzC,QAAQ,EAGT,GAJ0C;IAKzC,qBAAO,6LAAC,oKAAe;kBAAE;;;;;;AAC3B;KANwB","debugId":null}}]
-}
