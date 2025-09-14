@@ -1,0 +1,50 @@
+# Allow-listed data sources for governed web access
+# Add or remove entries to control which domains/tools the AI may fetch from.
+
+version: 1
+sources:
+  - name: SEC EDGAR
+    description: Official SEC filings
+    allow:
+      - host: www.sec.gov
+        paths:
+          - /Archives/edgar/**
+          - /cgi-bin/browse-edgar
+    notes: Respect SEC fair-use and rate limits
+
+  - name: FRED
+    description: Federal Reserve Economic Data
+    allow:
+      - host: api.stlouisfed.org
+        paths:
+          - /fred/**
+
+  - name: Nasdaq
+    description: Nasdaq market data and company info
+    allow:
+      - host: www.nasdaq.com
+        paths:
+          - /market-activity/**
+          - /symbol/**
+
+  - name: Yahoo Finance
+    description: Historical and real-time quotes, news
+    allow:
+      - host: finance.yahoo.com
+        paths:
+          - /**
+
+  - name: Company IR Pages
+    description: Official investor relations websites
+    allow:
+      - host: "*.ir.*"
+      - host: "ir.*"
+    governance:
+      require_manual_review: true
+
+governance:
+  robots_respect: true
+  tos_respect: true
+  user_agent: PriceControlAI/1.0 (respectful)
+  cache_ttl_seconds: 86400
+

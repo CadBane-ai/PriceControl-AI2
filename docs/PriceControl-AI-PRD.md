@@ -80,7 +80,7 @@ The UX vision is to create a clean, data-dense, and highly efficient interface t
 * A monorepo is assumed, containing the Next.js frontend, API routes, shared libraries, and prompt configurations in a single Git repository. This approach is ideal for full-stack TypeScript projects as it simplifies type sharing and dependency management.
 
 ### Service Architecture: Serverless
-* The architecture will be serverless, utilizing Next.js Route Handlers (running on Vercel Functions) for the API and backend logic. This backend will communicate with the separately hosted vLLM service, Neon database, and other cloud services.
+* The architecture will be serverless, utilizing Next.js Route Handlers (running on Vercel Functions) for the API and backend logic. This backend will communicate with the Together.ai inference API, Neon database, and other cloud services.
 
 ### Testing Requirements: Full Testing Pyramid
 * A comprehensive testing strategy is assumed, including unit tests for individual components, integration tests for services, and end-to-end tests for critical user flows. This ensures a high-quality, reliable product.
@@ -89,7 +89,7 @@ The UX vision is to create a clean, data-dense, and highly efficient interface t
 * **Frontend Framework:** Next.js with App Router will be used.
 * **Styling:** Tailwind CSS with shadcn/ui components is the chosen styling solution.
 * **Database & ORM:** The primary database will be Neon Serverless Postgres, with Drizzle used as the ORM.
-* **LLM Runtime:** The Qwen3-30B-A3B model will be served via vLLM, providing an OpenAI-compatible API endpoint.
+* **LLM Runtime:** LLM inference will be provided via Together.ai’s OpenAI-compatible API; specific models are environment-configured (e.g., `TOGETHER_MODEL_INSTRUCT`, `TOGETHER_MODEL_REASONING`).
 * **Deployment Platform:** The application will be deployed and hosted on Vercel.
 * **Caching & Rate Limiting:** Upstash Redis will be used for caching and to enforce rate limits on the API.
 
@@ -186,7 +186,7 @@ The UX vision is to create a clean, data-dense, and highly efficient interface t
 
 ## 7. Epic 2: Core LLM Interaction & Governance
 
-**Expanded Epic Goal:** This epic brings the financial assistant to life. It covers building the chat UI, establishing a live, streaming connection to the self-hosted vLLM service, enabling model selection, and implementing the critical data governance layer. By the end of this epic, a logged-in user will be able to have a meaningful conversation and receive trustworthy, source-governed answers.
+**Expanded Epic Goal:** This epic brings the financial assistant to life. It covers building the chat UI, establishing a live, streaming connection to the Together.ai inference API, enabling model selection, and implementing the critical data governance layer. By the end of this epic, a logged-in user will be able to have a meaningful conversation and receive trustworthy, source-governed answers.
 
 ### Story 2.1: Basic Chat UI Scaffolding
 * **As a** user,
@@ -214,14 +214,14 @@ The UX vision is to create a clean, data-dense, and highly efficient interface t
 
 ### Story 2.3: Create Backend AI Chat Stream
 * **As a** developer,
-* **I want** to create a backend API route that streams data from the vLLM service,
+* **I want** to create a backend API route that streams data from the Together.ai API,
 * **so that** the frontend can receive and display the LLM's response.
 
 **Acceptance Criteria:**
 1.  A new API route is created at `/api/ai/route.ts`.
 2.  The route is configured to receive a list of messages from the frontend.
-3.  The route successfully connects to the self-hosted vLLM endpoint.
-4.  The route streams the response from the vLLM back to the client.
+3.  The route successfully connects to the Together.ai endpoint using the provider API key.
+4.  The route streams the response from Together.ai back to the client.
 5.  The frontend chat interface from Story 2.2 is connected to this endpoint and successfully displays the streamed response.
 
 ### Story 2.4: Implement Dual-Model Selection
@@ -232,7 +232,7 @@ The UX vision is to create a clean, data-dense, and highly efficient interface t
 **Acceptance Criteria:**
 1.  A UI control (e.g., a toggle or dropdown) is added to the chat interface to select "Instruct" or "Thinking" mode.
 2.  The user's selection is passed to the `/api/ai/route.ts` endpoint with each request.
-3.  The backend API uses the `mode` parameter to call the correct model on the vLLM service.
+3.  The backend API uses the `mode` parameter to call the correct model configured for Together.ai.
 4.  The chat interface visually indicates which model is currently active.
 
 ### Story 2.5: Implement Data Source Registry & Governed `web.fetch` Tool

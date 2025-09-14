@@ -27,7 +27,7 @@ The architecture for PriceControl will be a full-stack, type-safe web applicatio
 
 ### Platform and Infrastructure Choice
 * **Platform:** Vercel
-* **Key Services:** Vercel Functions, Neon (Postgres), Upstash (Redis), Stripe (Payments), and a separate GPU host for the vLLM service.
+* **Key Services:** Vercel Functions, Neon (Postgres), Upstash (Redis), Stripe (Payments), and an external LLM inference provider (Together.ai).
 * **Deployment Regions:** US-East for primary compute and database services, with global distribution for static assets via Vercel's Edge Network.
 
 ### Repository Structure
@@ -53,8 +53,8 @@ graph TD
         H[External Financial APIs]
     end
 
-    subgraph "AI Layer (External Host)"
-        I[vLLM Service]
+    subgraph "AI Layer (Inference Provider)"
+        I[Together.ai API]
     end
 
     A --> B;
@@ -348,9 +348,9 @@ graph TD
 * **Technology Stack:** Drizzle ORM `~0.30`, Neon Serverless Driver, Postgres `16`.
 
 #### LLM Gateway Service
-* **Responsibility:** To serve as the dedicated and secure interface between our application and the external vLLM service. It is responsible for loading system prompts, constructing the final request to the LLM, defining and providing the available tools, and most critically, enforcing the data source governance by validating all tool calls against the `/datasources.yml` allow-list.
+* **Responsibility:** Acts as the dedicated and secure interface between our application and the Together.ai provider. It loads system prompts, constructs the final request to the LLM, defines/provides tools, and enforces the data source governance by validating all tool calls against the `/datasources.yml` allow-list.
 * **Key Interfaces:** Exposes a primary function to the API Layer that takes the conversation context (messages, selected model) and returns a readable stream of the AI's response.
-* **Dependencies:** Depends on the external vLLM Service for text generation and the Data Persistence Service to create an audit log of all tool calls.
+* **Dependencies:** Depends on the Together.ai API for text generation and the Data Persistence Service to create an audit log of all tool calls.
 * **Technology Stack:** TypeScript, Vercel AI SDK, Zod (for tool parameter validation).
 
 #### Payments Service (Stripe Integration)
@@ -359,16 +359,22 @@ graph TD
 * **Dependencies:** Depends on the external Stripe API for all payment processing and on the Data Persistence Service to update the `User` model with subscription changes.
 * **Technology Stack:** Stripe Node.js library, Next.js API Routes.
 
+#### Email Service (Resend)
+* **Responsibility:** Send transactional emails for password reset and other account notifications.
+* **Key Interfaces:** Internal function used by Auth flows to send reset links with expiring tokens.
+* **Dependencies:** Depends on Resend API and environment-configured sender address.
+* **Technology Stack:** Resend Node.js SDK.
+
 ---
 ## 7. External APIs
 
-### vLLM Service API (for Qwen3)
-* **Purpose:** To provide the core AI text generation capabilities for the application.
-* **Documentation:** This is an OpenAI-compatible API served by our self-hosted vLLM instance. It will adhere to the standard OpenAI Chat Completions API format.
-* **Base URL(s):** To be defined in the `VLLM_BASE_URL` environment variable, pointing to our privately hosted GPU server.
-* **Authentication:** A static API key, stored in the `VLLM_API_KEY` environment variable, will be used to secure the endpoint from public access.
+### Together.ai API (LLM Inference)
+* **Purpose:** Managed provider for the core AI text generation capabilities.
+* **Documentation:** OpenAI-compatible Chat Completions API provided by Together.ai.
+* **Authentication:** API key stored in `TOGETHER_API_KEY` (set in environment).
+* **Model Selection:** Configure via `TOGETHER_MODEL_INSTRUCT` and `TOGETHER_MODEL_REASONING` to support dual-mode selection.
 * **Key Endpoints Used:**
-    * `POST /v1/chat/completions` - The standard endpoint for generating streaming chat responses.
+    * `POST /v1/chat/completions` - Streaming chat responses via provider.
 
 ### Stripe API
 * **Purpose:** To handle all payment processing, including creating subscription checkouts and managing customer billing information.
@@ -378,6 +384,14 @@ graph TD
 * **Key Endpoints Used:**
     * `POST /v1/checkout/sessions` - To create a new checkout session for a user to subscribe.
     * `POST /v1/billing_portal/sessions` - To create a session for the customer portal.
+
+### Resend API
+* **Purpose:** Transactional email delivery for password reset and notifications.
+* **Documentation:** https://resend.com/docs
+* **Base URL:** https://api.resend.com
+* **Authentication:** API key stored in `RESEND_API_KEY`.
+* **Key Endpoints Used:**
+    * `POST /emails` - Send password reset email with token link.
 
 ### Financial Data APIs (Governed by Source Registry)
 * **Purpose:** To provide the raw financial, economic, and political data required by the LLM to answer user queries. This is a collection of diverse external sources.
@@ -420,7 +434,7 @@ sequenceDiagram
     participant WebUI as Web UI
     participant APILayer as API Layer
     participant LLMGateway as LLM Gateway
-    participant vLLM as vLLM Service (External)
+    participant Together as Together.ai API (External)
     participant Tool as Governed Tool (web.fetch)
     participant DataAPI as External Data API
     participant AuditLog as Data Persistence
@@ -428,16 +442,16 @@ sequenceDiagram
     User->>WebUI: Submits query
     WebUI->>APILayer: POST /api/ai/chat
     APILayer->>LLMGateway: ProcessRequest(messages)
-    LLMGateway->>vLLM: streamText(prompt, tools)
-    vLLM-->>LLMGateway: Request to use Tool(params)
+    LLMGateway->>Together: streamText(prompt, tools)
+    Together-->>LLMGateway: Request to use Tool(params)
     LLMGateway->>Tool: Validate & Execute(params)
     Tool-->>Tool: Check source against allow-list
     Tool->>DataAPI: Fetch data
     LLMGateway->>AuditLog: Create ToolCallLog entry
     DataAPI-->>Tool: Return financial data
     Tool-->>LLMGateway: Return formatted data
-    LLMGateway->>vLLM: Provide tool output
-    vLLM-->>LLMGateway: Stream synthesized answer
+    LLMGateway->>Together: Provide tool output
+    Together-->>LLMGateway: Stream synthesized answer
     LLMGateway-->>APILayer: Stream response
     APILayer-->>WebUI: Stream response
     WebUI-->>User: Display streaming answer & citation
@@ -547,18 +561,23 @@ pnpm test
 DATABASE_URL="postgresql://user:password@host:port/dbname?sslmode=require"
 NEXTAUTH_SECRET="your-super-secret-key-for-nextauth"
 NEXTAUTH_URL="http://localhost:3000"
-VLLM_BASE_URL="http://your-gpu-host-ip:8000"
-VLLM_API_KEY="your-secret-key-for-vllm"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+TOGETHER_API_KEY="your-together-api-key"
+TOGETHER_MODEL_INSTRUCT="meta-llama/Meta-Llama-3.1-70B-Instruct-Turbo" # example
+TOGETHER_MODEL_REASONING="Qwen/Qwen2.5-72B-Instruct" # example
 STRIPE_SECRET_KEY="sk_test_..."
 STRIPE_WEBHOOK_SECRET="whsec_..."
 UPSTASH_REDIS_REST_URL="https://..."
 UPSTASH_REDIS_REST_TOKEN="..."
+RESEND_API_KEY="re_..."
+MAIL_FROM="noreply@example.com"
 ```
 ---
 ## 12. Deployment Architecture
 ### Deployment Strategy
 * **Frontend & API Layer:** Deployed automatically by Vercel's Git-based workflow. Pushing to a branch creates a Preview URL; merging to `main` deploys to Production.
-* **vLLM Service:** Deployed manually for the MVP on a dedicated GPU host.
+* **LLM Provider:** Managed service (Together.ai) — no self-hosted GPU required.
 ### CI/CD Pipeline
 The primary CI/CD is managed by Vercel, which automatically runs install, lint, test, and build steps on every push.
 ### Environments
@@ -608,7 +627,7 @@ A unified strategy will be used. Backend API errors will conform to a standardiz
 * **Performance Monitoring:** Sentry for detailed transaction tracing.
 ### Key Metrics
 * **Frontend:** Core Web Vitals, JavaScript Error Rate, User Funnels.
-* **Backend:** API Error Rate, API Response Time, vLLM Service Health, Database Health.
+* **Backend:** API Error Rate, API Response Time, LLM Provider Availability, Database Health.
 ---
 ## 18. Checklist Results Report
 * **Overall Architecture Readiness:** High
