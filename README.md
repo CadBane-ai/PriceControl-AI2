@@ -49,3 +49,20 @@ pnpm drizzle:migrate
 Notes:
 - Do not commit secrets. Configure `DATABASE_URL` in Vercel for deployments.
 - Only the `users` table is introduced in this story. Additional tables are added in later stories.
+
+## Auth & Sessions (Story 1.5)
+This project uses NextAuth (Auth.js) with a Credentials provider and JWT sessions.
+
+Environment (local, not committed):
+- `NEXTAUTH_SECRET=your-strong-secret`
+- `NEXTAUTH_URL=http://localhost:3000`
+- `DATABASE_URL=postgresql://.../db?sslmode=require` (from Story 1.2)
+
+Endpoints:
+- NextAuth handlers: `GET/POST /api/auth/[...nextauth]`
+- Registration API (Story 1.4): `POST /api/auth/register` { email, password }
+- Login helper (this story): `POST /api/auth/login` → returns guidance to use credentials flow
+
+Client login flow (wired in Story 1.6):
+- Use NextAuth helper, e.g. `signIn('credentials', { email, password, redirect: false })`
+- On success, session cookie is set; read with `getServerSession` on server routes.
