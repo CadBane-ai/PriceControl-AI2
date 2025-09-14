@@ -17,25 +17,20 @@ export function AuthGuard({ children, allowBypass = false }: AuthGuardProps) {
   const router = useRouter()
 
   useEffect(() => {
-    // Mock authentication check - replace with real implementation
-    const checkAuth = async () => {
+    // Minimal client guard that relies on NextAuth middleware for redirects
+    const check = async () => {
       try {
-        // In a real app, check for valid session/token
-        const hasValidSession = allowBypass || localStorage.getItem("mock-auth") === "true"
-
-        if (hasValidSession) {
-          setIsAuthenticated(true)
-        } else {
-          router.push("/login")
-        }
-      } catch (error) {
-        router.push("/login")
+        // Ping a lightweight endpoint that requires auth; fall back to trusting middleware
+        const res = await fetch("/api/usage", { method: "GET" })
+        if (res.ok) setIsAuthenticated(true)
+        else router.push("/login")
+      } catch {
+        if (!allowBypass) router.push("/login")
       } finally {
         setIsLoading(false)
       }
     }
-
-    checkAuth()
+    check()
   }, [router, allowBypass])
 
   if (isLoading) {

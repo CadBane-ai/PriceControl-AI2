@@ -1,3 +1,5 @@
+<!-- Powered by BMAD™ Core -->
+
 # Story Draft Checklist
 
 The Scrum Master should use this checklist to validate that each story contains sufficient context for a developer agent to implement it successfully, while assuming the dev agent has reasonable capabilities to figure things out.
@@ -117,19 +119,16 @@ Note: We don't need every file listed - just the important ones.]]
 Generate a concise validation report:
 
 1. Quick Summary
-
    - Story readiness: READY / NEEDS REVISION / BLOCKED
    - Clarity score (1-10)
    - Major gaps identified
 
 2. Fill in the validation table with:
-
    - PASS: Requirements clearly met
    - PARTIAL: Some gaps but workable
    - FAIL: Critical information missing
 
 3. Specific Issues (if any)
-
    - List concrete problems to fix
    - Suggest specific improvements
    - Identify any blocking dependencies
@@ -139,7 +138,7 @@ Generate a concise validation report:
    - What questions would you have?
    - What might cause delays or rework?
 
-Be pragmatic - perfect documentation doesn't exist. Focus on whether a competent developer can succeed with this story.]]
+Be pragmatic - perfect documentation doesn't exist, but it must be enough to provide the extreme context a dev agent needs to get the work down and not create a mess.]]
 
 | Category                             | Status | Issues |
 | ------------------------------------ | ------ | ------ |

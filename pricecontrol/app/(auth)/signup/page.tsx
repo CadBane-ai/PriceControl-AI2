@@ -30,7 +30,12 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true)
     try {
-      await apiClient.register(data.email, data.password)
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      })
+      if (!res.ok) throw new Error("failed")
       toast({
         title: "Account created successfully",
         description: "Please check your email to verify your account.",

@@ -30,7 +30,12 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true)
     try {
-      await apiClient.forgotPassword(data.email)
+      const res = await fetch("/api/auth/forgot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      })
+      if (!res.ok) throw new Error("failed")
       setIsSubmitted(true)
     } catch (error) {
       toast({

@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormField } from "@/components/ui/form-field"
 import { useToast } from "@/hooks/use-toast"
 import { loginSchema, type LoginFormData } from "@/lib/validators"
-import { apiClient } from "@/lib/api"
+import { signIn } from "next-auth/react"
 import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
@@ -29,21 +29,13 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
-    try {
-      await apiClient.login(data.email, data.password)
-      toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
-      })
+    const res = await signIn("credentials", { redirect: false, email: data.email, password: data.password })
+    setIsLoading(false)
+    if (res?.ok) {
+      toast({ title: "Welcome back!", description: "You have been signed in successfully." })
       router.push("/dashboard")
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
+    } else {
+      toast({ title: "Error", description: "Invalid email or password.", variant: "destructive" })
     }
   }
 

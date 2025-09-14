@@ -5,35 +5,39 @@ export class ApiClient {
   private baseUrl = "/api"
 
   async register(email: string, password: string): Promise<void> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Mock register:", { email })
-    // Set mock auth for preview
-    localStorage.setItem("mock-auth", "true")
+    const res = await fetch(`${this.baseUrl}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    })
+    if (!res.ok) throw new Error("Registration failed")
   }
 
   async login(email: string, password: string): Promise<User> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    // Set mock auth for preview
-    localStorage.setItem("mock-auth", "true")
-    return {
-      id: "1",
-      email,
-      name: email.split("@")[0],
-    }
+    // Delegate to NextAuth credentials provider
+    const params = new URLSearchParams()
+    params.set("email", email)
+    params.set("password", password)
+    // NextAuth expects form-encoded by default; we'll call via next-auth/react in page for feedback
+    throw new Error("Use next-auth signIn in UI")
   }
 
   async forgotPassword(email: string): Promise<void> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Mock forgot password:", { email })
+    const res = await fetch(`${this.baseUrl}/auth/forgot`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    })
+    if (!res.ok) throw new Error("Request failed")
   }
 
   async resetPassword(token: string, password: string): Promise<void> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Mock reset password:", { token })
+    const res = await fetch(`${this.baseUrl}/auth/reset`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    })
+    if (!res.ok) throw new Error("Reset failed")
   }
 
   async getConversations(): Promise<Conversation[]> {
@@ -75,46 +79,25 @@ export class ApiClient {
   }
 
   async sendMessage(messages: Message[], model: "instruct" | "reasoning"): Promise<ReadableStream> {
-    // Mock streaming response
-    const encoder = new TextEncoder()
-    const stream = new ReadableStream({
-      start(controller) {
-        const response =
-          "This is a mock streaming response from the AI assistant. In a real implementation, this would connect to your AI service."
-        const words = response.split(" ")
-        let i = 0
-
-        const interval = setInterval(() => {
-          if (i < words.length) {
-            controller.enqueue(encoder.encode(words[i] + " "))
-            i++
-          } else {
-            controller.close()
-            clearInterval(interval)
-          }
-        }, 100)
-      },
+    const res = await fetch(`${this.baseUrl}/ai/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages, model }),
     })
-
-    return stream
+    if (!res.ok || !res.body) throw new Error("Chat failed")
+    return res.body
   }
 
   async getUsage(): Promise<Usage> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    return {
-      plan: "free",
-      usedToday: 15,
-      dailyLimit: 50,
-    }
+    const res = await fetch(`${this.baseUrl}/usage`)
+    if (!res.ok) throw new Error("Failed to load usage")
+    return res.json()
   }
 
   async createCheckoutSession(): Promise<{ url: string }> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return {
-      url: "https://checkout.stripe.com/mock-session",
-    }
+    const res = await fetch(`${this.baseUrl}/billing/checkout`, { method: "POST" })
+    if (!res.ok) throw new Error("Checkout failed")
+    return res.json()
   }
 }
 

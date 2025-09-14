@@ -48,7 +48,12 @@ export default function ResetPasswordPage() {
 
     setIsLoading(true)
     try {
-      await apiClient.resetPassword(token, data.password)
+      const res = await fetch("/api/auth/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: data.password }),
+      })
+      if (!res.ok) throw new Error("failed")
       toast({
         title: "Password updated",
         description: "Your password has been successfully updated.",
