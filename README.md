@@ -24,3 +24,28 @@ This proxies to `apps/web` and starts the Next.js dev server.
 ## Notes
 - Environment configuration and secrets will be added in a later story.
 - See `docs/stories/1.1.monorepo-scaffold-and-import-v0-frontend.md` for the story tracking this change.
+
+## Database & Drizzle (Story 1.2)
+This project uses Neon Postgres with Drizzle ORM for migrations.
+
+Prerequisites:
+- Create a Neon Postgres database
+- Set `DATABASE_URL` locally (Neon usually needs `?sslmode=require`)
+
+Commands (from `apps/web`):
+```
+cd apps/web
+# ensure Node 20 & pnpm 9
+corepack enable && corepack prepare pnpm@9.12.2 --activate
+
+# install deps
+pnpm install
+
+# generate and run migrations
+pnpm drizzle:generate
+pnpm drizzle:migrate
+```
+
+Notes:
+- Do not commit secrets. Configure `DATABASE_URL` in Vercel for deployments.
+- Only the `users` table is introduced in this story. Additional tables are added in later stories.
