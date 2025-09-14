@@ -12,6 +12,9 @@ Welcome to the PriceControl project documentation. This index links all major pl
 - PRD Sections: `docs/prd/index.md`
 - Architecture Sections: `docs/architecture/index.md`
 
+## Handoff
+- Agent handoff and next steps: `docs/AGENT_HANDOFF.md`
+
 ## Getting Started Preferences
 - Package manager: pnpm
 - Repo layout: Monorepo (apps/web)
@@ -21,4 +24,3 @@ Welcome to the PriceControl project documentation. This index links all major pl
 - Run PO Master Checklist (interactive)
 - Initialize monorepo scaffold (Next.js App Router, TypeScript, Tailwind, Drizzle, NextAuth)
 - Generate AI UI prompt for v0/Lovable based on UI spec + architecture
-
