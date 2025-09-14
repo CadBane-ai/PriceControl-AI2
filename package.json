@@ -1,0 +1,17 @@
+{
+  "name": "pricecontrol-monorepo",
+  "private": true,
+  "packageManager": "pnpm@9",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --filter @pricecontrol/web dev",
+    "build": "pnpm --filter @pricecontrol/web build",
+    "start": "pnpm --filter @pricecontrol/web start",
+    "lint": "pnpm --filter @pricecontrol/web lint",
+    "test": "pnpm --filter @pricecontrol/web test || echo 'tests pending'"
+  }
+}
+

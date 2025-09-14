@@ -1,3 +1,20 @@
 # BMAD (local only)
 .bmad-core/
 .bmad-*/
+
+# Node/PNPM
+node_modules/
+pnpm-lock.yaml
+
+# Next.js
+.next/
+.vercel/
+out/
+
+# Build artifacts
+dist/
+coverage/
+
+# Env files (do not commit secrets)
+.env
+.env.*
