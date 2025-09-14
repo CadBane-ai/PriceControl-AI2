@@ -4,7 +4,9 @@
 
 # Node/PNPM
 node_modules/
+# Allow lockfiles in sub-packages for Vercel builds
 pnpm-lock.yaml
+!apps/**/pnpm-lock.yaml
 
 # Next.js
 .next/
