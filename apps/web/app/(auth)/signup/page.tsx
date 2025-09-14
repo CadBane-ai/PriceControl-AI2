@@ -27,24 +27,14 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
   })
 
-  const onSubmit = async (data: SignupFormData) => {
+  const onSubmit = async (_data: SignupFormData) => {
     setIsLoading(true)
-    try {
-      await apiClient.register(data.email, data.password)
-      toast({
-        title: "Account created successfully",
-        description: "Please check your email to verify your account.",
-      })
-      router.push("/login")
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to create account. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+    // Story 1.3 scope: UI only, no backend wiring yet
+    toast({
+      title: "Signup form submitted",
+      description: "Registration is not connected yet.",
+    })
+    setIsLoading(false)
   }
 
   return (

@@ -27,24 +27,14 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (_data: LoginFormData) => {
     setIsLoading(true)
-    try {
-      await apiClient.login(data.email, data.password)
-      toast({
-        title: "Welcome back!",
-        description: "You have been signed in successfully.",
-      })
-      router.push("/dashboard")
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+    // Story 1.3 scope: UI only, no backend wiring yet
+    toast({
+      title: "Login form submitted",
+      description: "Authentication is not connected yet.",
+    })
+    setIsLoading(false)
   }
 
   return (
