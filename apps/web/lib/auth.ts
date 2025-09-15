@@ -43,7 +43,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 export const authOptions: NextAuthOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   session: { strategy: "jwt" },
   providers,
   callbacks: {
@@ -63,5 +63,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
 };
+
+if (!authOptions.secret) {
+  console.error("AUTH_SECRET or NEXTAUTH_SECRET is not set. Authentication will not work.");
+}
 
 export const authHandler = NextAuth(authOptions);
