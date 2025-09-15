@@ -13,7 +13,7 @@ export async function middleware(req: NextRequest) {
   const isProtected = PROTECTED_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
   if (!isProtected) return NextResponse.next();
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const token = await getToken({ req });
   if (!token) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("next", pathname);
