@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,14 +28,25 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = async (_data: LoginFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
-    // Story 1.3 scope: UI only, no backend wiring yet
-    toast({
-      title: "Login form submitted",
-      description: "Authentication is not connected yet.",
-    })
-    setIsLoading(false)
+    try {
+      const result = await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        redirect: false,
+      })
+      if (result?.ok) {
+        toast({ title: "Welcome back!", description: "Signed in successfully." })
+        router.push("/dashboard")
+      } else {
+        toast({ title: "Invalid credentials", description: "Please try again.", variant: "destructive" })
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Network error. Please try again.", variant: "destructive" })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

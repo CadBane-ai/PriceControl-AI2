@@ -66,3 +66,11 @@ Endpoints:
 Client login flow (wired in Story 1.6):
 - Use NextAuth helper, e.g. `signIn('credentials', { email, password, redirect: false })`
 - On success, session cookie is set; read with `getServerSession` on server routes.
+
+## Route Protection (Story 1.6)
+This app uses a middleware-based approach to guard protected routes.
+
+- Middleware: `apps/web/middleware.ts` uses `next-auth/jwt` `getToken` to require auth.
+- Protected paths: `/dashboard`, `/account`, `/billing` (adjust via `matcher` and `PROTECTED_PATHS`).
+- Unauthenticated users are redirected to `/login` with a `next` query param.
+- Client-side guard: `components/auth-guard.tsx` also checks `useSession` (secondary, optional).

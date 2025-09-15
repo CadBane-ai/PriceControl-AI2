@@ -2,9 +2,10 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 interface AuthGuardProps {
   children: React.ReactNode
@@ -12,43 +13,22 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, allowBypass = false }: AuthGuardProps) {
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const { status } = useSession()
   const router = useRouter()
 
   useEffect(() => {
-    // Mock authentication check - replace with real implementation
-    const checkAuth = async () => {
-      try {
-        // In a real app, check for valid session/token
-        const hasValidSession = allowBypass || localStorage.getItem("mock-auth") === "true"
-
-        if (hasValidSession) {
-          setIsAuthenticated(true)
-        } else {
-          router.push("/login")
-        }
-      } catch (error) {
-        router.push("/login")
-      } finally {
-        setIsLoading(false)
-      }
+    if (status === "unauthenticated" && !allowBypass) {
+      router.push("/login")
     }
+  }, [status, allowBypass, router])
 
-    checkAuth()
-  }, [router, allowBypass])
-
-  if (isLoading) {
+  if (status === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
   }
-
-  if (!isAuthenticated) {
-    return null // Will redirect to login
-  }
-
+  if (status === "unauthenticated" && !allowBypass) return null
   return <>{children}</>
 }

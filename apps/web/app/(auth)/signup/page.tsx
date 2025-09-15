@@ -27,14 +27,28 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
   })
 
-  const onSubmit = async (_data: SignupFormData) => {
+  const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true)
-    // Story 1.3 scope: UI only, no backend wiring yet
-    toast({
-      title: "Signup form submitted",
-      description: "Registration is not connected yet.",
-    })
-    setIsLoading(false)
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email, password: data.password }),
+      })
+
+      if (res.ok) {
+        toast({ title: "Account created", description: "You can now sign in." })
+        router.push("/login")
+      } else {
+        const payload = await res.json().catch(() => ({}))
+        const msg = payload?.error || (res.status === 409 ? "User already exists" : "Failed to create account")
+        toast({ title: "Error", description: msg, variant: "destructive" })
+      }
+    } catch (err) {
+      toast({ title: "Error", description: "Network error. Please try again.", variant: "destructive" })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

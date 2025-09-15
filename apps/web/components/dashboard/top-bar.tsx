@@ -18,6 +18,7 @@ import { useTheme } from "next-themes"
 import { apiClient } from "@/lib/api"
 import type { Usage } from "@/lib/types"
 import { User, Settings, LogOut, Sun, Moon, Zap } from "lucide-react"
+import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
 
 interface TopBarProps {
@@ -28,6 +29,7 @@ interface TopBarProps {
 export function TopBar({ model, onModelChange }: TopBarProps) {
   const [usage, setUsage] = useState<Usage | null>(null)
   const { theme, setTheme } = useTheme()
+  const { data: session } = useSession()
 
   useEffect(() => {
     const loadUsage = async () => {
@@ -43,9 +45,7 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
   }, [])
 
   const handleLogout = () => {
-    // In a real app, clear session/tokens
-    localStorage.removeItem("mock-auth")
-    window.location.href = "/login"
+    signOut({ callbackUrl: "/login" })
   }
 
   const getUsageColor = (used: number, limit: number) => {
@@ -109,8 +109,8 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">PriceControl User</p>
-                  <p className="text-xs leading-none text-muted-foreground">user@example.com</p>
+                  <p className="text-sm font-medium leading-none">{session?.user?.email ?? "User"}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{session?.user?.email ?? ""}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
