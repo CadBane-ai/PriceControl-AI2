@@ -32,7 +32,8 @@ export default function SignupPage() {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+        cache: "no-store",
         body: JSON.stringify({ email: data.email, password: data.password }),
       })
 

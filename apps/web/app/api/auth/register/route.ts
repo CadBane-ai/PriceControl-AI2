@@ -5,6 +5,12 @@ import { eq } from "drizzle-orm";
 import { registerSchema } from "@/lib/validators";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
+function noStoreInit(status: number) {
+  return { status, headers: { "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0" } } as const;
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -12,7 +18,7 @@ export async function POST(req: Request) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid request", details: parsed.error.flatten() },
-        { status: 400 }
+        noStoreInit(400)
       );
     }
 
@@ -21,7 +27,7 @@ export async function POST(req: Request) {
     // Check if user already exists
     const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (existing.length > 0) {
-      return NextResponse.json({ error: "User already exists" }, { status: 409 });
+      return NextResponse.json({ error: "User already exists" }, noStoreInit(409));
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -33,11 +39,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       { user: inserted[0] },
-      { status: 201 }
+      noStoreInit(201)
     );
   } catch (err) {
     console.error("/api/auth/register error", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, noStoreInit(500));
   }
 }
-
