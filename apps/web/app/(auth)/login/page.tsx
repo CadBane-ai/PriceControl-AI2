@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const {
     register,
@@ -31,16 +32,19 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
     try {
+      const callbackUrl = searchParams.get("next") ?? "/dashboard"
       const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
         redirect: false,
+        callbackUrl,
       })
       if (result?.ok) {
         toast({ title: "Welcome back!", description: "Signed in successfully." })
-        router.push("/dashboard")
+        router.push(result.url ?? callbackUrl)
       } else {
-        toast({ title: "Invalid credentials", description: "Please try again.", variant: "destructive" })
+        const description = result?.error ? "Invalid email or password." : "Please try again."
+        toast({ title: "Invalid credentials", description, variant: "destructive" })
       }
     } catch (err) {
       toast({ title: "Error", description: "Network error. Please try again.", variant: "destructive" })
