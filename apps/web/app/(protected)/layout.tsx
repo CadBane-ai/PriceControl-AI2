@@ -6,5 +6,5 @@ export default function ProtectedLayout({
 }: {
   children: React.ReactNode
 }) {
-  return <AuthGuard allowBypass={true}>{children}</AuthGuard>
+  return <AuthGuard allowBypass={false}>{children}</AuthGuard>
 }
