@@ -46,3 +46,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Internal server error" }, noStoreInit(500));
   }
 }
+
+export async function GET() {
+  // Prevent accidental cache hits and make it clear GET is not supported
+  return NextResponse.json({ error: "Method Not Allowed" }, noStoreInit(405));
+}
