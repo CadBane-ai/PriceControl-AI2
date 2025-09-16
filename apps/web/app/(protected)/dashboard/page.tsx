@@ -20,6 +20,24 @@ export default function DashboardPage() {
     setChatState((prev) => ({ ...prev, model }))
   }
 
+  const handleSendMessage = (content: string) => {
+    const newMessage = {
+      id: `${Date.now()}`,
+      role: "user" as const,
+      content,
+      createdAt: new Date().toISOString(),
+    }
+    setChatState((prev) => ({
+      ...prev,
+      messages: [...prev.messages, newMessage],
+      loading: true,
+    }))
+    // Simulate processing without any network calls (Story 2.2)
+    setTimeout(() => {
+      setChatState((prev) => ({ ...prev, loading: false }))
+    }, 300)
+  }
+
 
   return (
     <div className="flex h-screen bg-background">
@@ -39,11 +57,11 @@ export default function DashboardPage() {
               streamingMessage={streamingMessage}
             />
 
-            {/* Message Composer (static scaffold for Story 2.1) */}
+            {/* Message Composer (client-side logic only for Story 2.2) */}
             <MessageComposer
-              onSendMessage={() => { /* static UI scaffold - no send in 2.1 */ }}
-              disabled={true}
-              placeholder="Chat UI scaffold (Story 2.1)"
+              onSendMessage={handleSendMessage}
+              disabled={chatState.loading}
+              placeholder="Ask about market trends, portfolio analysis, or financial insights..."
             />
           </div>
         </main>
