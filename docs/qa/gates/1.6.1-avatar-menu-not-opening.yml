@@ -1,0 +1,12 @@
+story: "Story 1.6.1: Avatar Menu Not Opening (Logout Inaccessible)"
+slug: 1.6.1-avatar-menu-not-opening
+decision: PASS
+reviewer: Quinn (Test Architect)
+date: 2025-09-16
+rationale: |
+  Manual verification confirms the avatar dropdown opens and the Log out
+  action redirects to /login as expected. No regressions observed in header
+  layout or keyboard accessibility. All acceptance criteria met; risk low.
+notes:
+  - Local dev validated via `pnpm dev` with .env.local in apps/web
+  - Visual behavior consistent across primary routes: /dashboard, /account, /billing
