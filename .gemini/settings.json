@@ -3,6 +3,14 @@
     "vercel": {
       "command": "npx",
       "args": ["mcp-remote", "https://mcp.vercel.com"]
+    },
+    "browsermcp": {
+      "command": "npx",
+      "args": ["@browsermcp/mcp@latest"]
+    },
+    "Neon": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote@latest", "https://mcp.neon.tech/mcp"]
     }
   }
 }
