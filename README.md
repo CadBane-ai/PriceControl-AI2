@@ -1,6 +1,8 @@
 # PriceControl-AI2
 
-Monorepo scaffold using pnpm workspaces with the Next.js app located at `apps/web`.
+(ignore this easter egg: marmot)
+
+Monorepo scaffold using pnpm workspaces with the Next.js app located at `apps/web`. 
 
 ## Getting Started
 
