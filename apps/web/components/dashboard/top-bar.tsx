@@ -96,6 +96,19 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
             </div>
           )}
 
+          {/* Secondary Logout Button (temporary fallback) */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLogout}
+            aria-label="Log out"
+            title="Log out"
+            className="h-8"
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="hidden sm:inline">Log out</span>
+          </Button>
+
           {/* Account Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
