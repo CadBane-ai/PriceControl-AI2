@@ -3,8 +3,19 @@ const tsParser = require("@typescript-eslint/parser");
 const tsPlugin = require("@typescript-eslint/eslint-plugin");
 
 module.exports = [
+  // Ignore generated and vendor artifacts
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
+    ignores: [
+      ".next/**",
+      "node_modules/**",
+      "drizzle/**",
+      "public/**",
+      "coverage/**",
+      "eslint.config.js",
+    ],
+  },
+  {
+    files: ["**/*.{ts,tsx,jsx}"],
     languageOptions: {
       parser: tsParser,
     },

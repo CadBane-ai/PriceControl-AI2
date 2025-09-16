@@ -40,7 +40,7 @@ export default function AccountPage() {
     },
   })
 
-  const onSubmit = async (data: ProfileFormData) => {
+  const onSubmit = async () => {
     setIsLoading(true)
     try {
       // Mock API call
@@ -49,7 +49,7 @@ export default function AccountPage() {
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       })
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",

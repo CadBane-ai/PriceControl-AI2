@@ -56,11 +56,7 @@ export function UsageMeter({ className, showDetails = false }: UsageMeterProps) 
     return "default"
   }
 
-  const getProgressColor = () => {
-    if (percentage >= 90) return "bg-red-500"
-    if (percentage >= 70) return "bg-yellow-500"
-    return "bg-primary"
-  }
+  // Progress bar color is handled by component theme; no custom class needed
 
   if (!showDetails) {
     return (

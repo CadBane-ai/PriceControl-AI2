@@ -19,14 +19,14 @@ export default function BillingPage() {
   const handleUpgrade = async () => {
     setIsLoading(true)
     try {
-      const { url } = await apiClient.createCheckoutSession()
+      await apiClient.createCheckoutSession()
       // In a real app, redirect to Stripe checkout
       toast({
         title: "Redirecting to checkout",
         description: "You will be redirected to complete your purchase.",
       })
       // window.location.href = url
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to start checkout process. Please try again.",

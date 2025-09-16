@@ -11,7 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormField } from "@/components/ui/form-field"
 import { useToast } from "@/hooks/use-toast"
 import { signupSchema, type SignupFormData } from "@/lib/validators"
-import { apiClient } from "@/lib/api"
 import { Loader2 } from "lucide-react"
 
 export default function SignupPage() {
@@ -45,7 +44,7 @@ export default function SignupPage() {
         const msg = payload?.error || (res.status === 409 ? "User already exists" : "Failed to create account")
         toast({ title: "Error", description: msg, variant: "destructive" })
       }
-    } catch (err) {
+    } catch {
       toast({ title: "Error", description: "Network error. Please try again.", variant: "destructive" })
     } finally {
       setIsLoading(false)

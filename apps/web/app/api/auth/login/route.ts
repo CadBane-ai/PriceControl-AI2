@@ -17,8 +17,7 @@ export async function POST(req: Request) {
       message:
         "Use NextAuth Credentials: call signIn('credentials', { email, password, redirect: false }) or POST to /api/auth/callback/credentials with form data.",
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

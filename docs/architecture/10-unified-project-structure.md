@@ -3,11 +3,14 @@
 pricecontrol/
 ├── apps/
 │   └── web/                    # The main Next.js application
-│       ├── src/
-│       │   ├── app/            # Next.js App Router layout and pages
-│       │   ├── components/     # UI components (shadcn/ui)
-│       │   ├── lib/            # Helper functions, utilities
-│       │   └── server/         # Server-side logic, API routes, Drizzle schema
+│       ├── app/                # Next.js App Router layout and pages
+│       ├── components/         # UI components (shadcn/ui)
+│       ├── lib/                # Helper functions, utilities
+│       ├── db/                 # Drizzle schema and DB client
+│       ├── drizzle/            # Drizzle migration artifacts
+│       ├── hooks/              # Reusable React hooks
+│       ├── public/             # Static assets
+│       ├── styles/             # Global styles
 │       └── ...
 ├── packages/
 │   └── shared/                 # Shared code between packages

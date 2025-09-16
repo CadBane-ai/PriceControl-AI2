@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Conversation, Message, Usage, User } from "./types"
 
 // Mock API client functions - replace with real implementations later
 export class ApiClient {
   private baseUrl = "/api"
 
-  async register(email: string, password: string): Promise<void> {
+  async register(email: string, _password: string): Promise<void> {
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 1000))
     console.log("Mock register:", { email })
@@ -12,7 +13,7 @@ export class ApiClient {
     localStorage.setItem("mock-auth", "true")
   }
 
-  async login(email: string, password: string): Promise<User> {
+  async login(email: string, _password: string): Promise<User> {
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 1000))
     // Set mock auth for preview
@@ -30,7 +31,7 @@ export class ApiClient {
     console.log("Mock forgot password:", { email })
   }
 
-  async resetPassword(token: string, password: string): Promise<void> {
+  async resetPassword(token: string, _password: string): Promise<void> {
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 1000))
     console.log("Mock reset password:", { token })
@@ -55,7 +56,7 @@ export class ApiClient {
     ]
   }
 
-  async getMessages(conversationId: string): Promise<Message[]> {
+  async getMessages(_conversationId: string): Promise<Message[]> {
     // Mock implementation
     await new Promise((resolve) => setTimeout(resolve, 500))
     return [
@@ -74,7 +75,7 @@ export class ApiClient {
     ]
   }
 
-  async sendMessage(messages: Message[], model: "instruct" | "reasoning"): Promise<ReadableStream> {
+  async sendMessage(_messages: Message[], _model: "instruct" | "reasoning"): Promise<ReadableStream> {
     // Mock streaming response
     const encoder = new TextEncoder()
     const stream = new ReadableStream({

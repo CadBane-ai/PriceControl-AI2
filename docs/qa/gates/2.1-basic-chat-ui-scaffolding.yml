@@ -1,0 +1,15 @@
+story: "Story 2.1: Basic Chat UI Scaffolding"
+slug: 2.1-basic-chat-ui-scaffolding
+decision: PASS
+reviewer: Quinn (Test Architect)
+date: 2025-09-16
+rationale: |
+  Post-implementation review confirms the dashboard now renders the static chat
+  layout at apps/web/app/(protected)/dashboard/page.tsx using shadcn/ui + Tailwind.
+  No data fetching or chat logic is present (static scaffold), the composer is
+  disabled, and the thread area scrolls. Route protection and wrappers remain
+  intact. Minimal unit tests and Vitest config are in place. Lint passes on
+  source. All acceptance criteria for Story 2.1 are met.
+notes:
+  - Tests execute under Node 20.x; local environment here logs engine warnings.
+  - Recommend adding an a11y smoke test in a later story.

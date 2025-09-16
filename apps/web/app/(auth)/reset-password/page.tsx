@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
         description: "Your password has been successfully updated.",
       })
       router.push("/login")
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to reset password. Please try again.",

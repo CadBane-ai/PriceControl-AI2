@@ -12,7 +12,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { FormField } from "@/components/ui/form-field"
 import { useToast } from "@/hooks/use-toast"
 import { loginSchema, type LoginFormData } from "@/lib/validators"
-import { apiClient } from "@/lib/api"
 import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
@@ -46,7 +45,7 @@ export default function LoginPage() {
         const description = result?.error ? "Invalid email or password." : "Please try again."
         toast({ title: "Invalid credentials", description, variant: "destructive" })
       }
-    } catch (err) {
+    } catch {
       toast({ title: "Error", description: "Network error. Please try again.", variant: "destructive" })
     } finally {
       setIsLoading(false)

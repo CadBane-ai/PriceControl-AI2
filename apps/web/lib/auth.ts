@@ -38,7 +38,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    }) as any
+    })
   );
 }
 
@@ -49,14 +49,15 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.sub = (user as any).id ?? token.sub;
-        token.email = user.email ?? token.email;
+        const u = user as { id?: string; email?: string | null };
+        token.sub = u.id ?? token.sub;
+        token.email = u.email ?? token.email;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).id = token.sub;
+        (session.user as unknown as { id?: string }).id = token.sub;
         session.user.email = token.email as string | undefined;
       }
       return session;
