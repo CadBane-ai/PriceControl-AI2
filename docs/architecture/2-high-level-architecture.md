@@ -5,7 +5,7 @@ The architecture for PriceControl will be a full-stack, type-safe web applicatio
 
 ## Platform and Infrastructure Choice
 * **Platform:** Vercel
-* **Key Services:** Vercel Functions, Neon (Postgres), Upstash (Redis), Stripe (Payments), and a separate GPU host for the vLLM service.
+* **Key Services:** Vercel Functions, Neon (Postgres), Upstash (Redis), Stripe (Payments), and Cerebras for the LLM service.
 * **Deployment Regions:** US-East for primary compute and database services, with global distribution for static assets via Vercel's Edge Network.
 
 ## Repository Structure
@@ -29,10 +29,7 @@ graph TD
         F[Upstash Redis]
         G[Stripe Payments]
         H[External Financial APIs]
-    end
-
-    subgraph "AI Layer (External Host)"
-        I[vLLM Service]
+        I[Cerebras API]
     end
 
     A --> B;

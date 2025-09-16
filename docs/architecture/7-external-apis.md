@@ -1,10 +1,10 @@
 # 7. External APIs
 
-## vLLM Service API (for Qwen3)
+## Cerebras API
 * **Purpose:** To provide the core AI text generation capabilities for the application.
-* **Documentation:** This is an OpenAI-compatible API served by our self-hosted vLLM instance. It will adhere to the standard OpenAI Chat Completions API format.
-* **Base URL(s):** To be defined in the `VLLM_BASE_URL` environment variable, pointing to our privately hosted GPU server.
-* **Authentication:** A static API key, stored in the `VLLM_API_KEY` environment variable, will be used to secure the endpoint from public access.
+* **Documentation:** The Cerebras API is an OpenAI-compatible API.
+* **Base URL(s):** To be defined in the `CEREBRAS_API_URL` environment variable.
+* **Authentication:** A static API key, stored in the `CEREBRAS_API_KEY` environment variable, will be used to secure the endpoint from public access.
 * **Key Endpoints Used:**
     * `POST /v1/chat/completions` - The standard endpoint for generating streaming chat responses.
 

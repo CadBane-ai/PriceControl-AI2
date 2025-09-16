@@ -30,6 +30,7 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
   const [usage, setUsage] = useState<Usage | null>(null)
   const { theme, setTheme } = useTheme()
   const { data: session } = useSession()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     const loadUsage = async () => {
@@ -125,12 +126,16 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
           </Button>
 
           {/* Account Menu */}
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 className="relative h-8 w-8 rounded-full"
                 title="Open user menu"
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                onClick={() => setMenuOpen((o) => !o)}
               >
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="text-xs">PC</AvatarFallback>

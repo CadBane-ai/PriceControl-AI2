@@ -33,7 +33,7 @@ sequenceDiagram
     participant WebUI as Web UI
     participant APILayer as API Layer
     participant LLMGateway as LLM Gateway
-    participant vLLM as vLLM Service (External)
+    participant Cerebras as Cerebras API (External)
     participant Tool as Governed Tool (web.fetch)
     participant DataAPI as External Data API
     participant AuditLog as Data Persistence
@@ -41,16 +41,16 @@ sequenceDiagram
     User->>WebUI: Submits query
     WebUI->>APILayer: POST /api/ai/chat
     APILayer->>LLMGateway: ProcessRequest(messages)
-    LLMGateway->>vLLM: streamText(prompt, tools)
-    vLLM-->>LLMGateway: Request to use Tool(params)
+    LLMGateway->>Cerebras: streamText(prompt, tools)
+    Cerebras-->>LLMGateway: Request to use Tool(params)
     LLMGateway->>Tool: Validate & Execute(params)
     Tool-->>Tool: Check source against allow-list
     Tool->>DataAPI: Fetch data
     LLMGateway->>AuditLog: Create ToolCallLog entry
     DataAPI-->>Tool: Return financial data
     Tool-->>LLMGateway: Return formatted data
-    LLMGateway->>vLLM: Provide tool output
-    vLLM-->>LLMGateway: Stream synthesized answer
+    LLMGateway->>Cerebras: Provide tool output
+    Cerebras-->>LLMGateway: Stream synthesized answer
     LLMGateway-->>APILayer: Stream response
     APILayer-->>WebUI: Stream response
     WebUI-->>User: Display streaming answer & citation

@@ -14,7 +14,7 @@ graph TD
 
     subgraph "External Systems"
         G[User's Browser]
-        H[vLLM Service <br> GPU Host]
+        H[Cerebras API]
         I[Stripe API]
         J[Financial Data APIs]
         K[Neon Postgres DB]
@@ -59,9 +59,9 @@ graph TD
 * **Technology Stack:** Drizzle ORM `~0.30`, Neon Serverless Driver, Postgres `16`.
 
 ### LLM Gateway Service
-* **Responsibility:** To serve as the dedicated and secure interface between our application and the external vLLM service. It is responsible for loading system prompts, constructing the final request to the LLM, defining and providing the available tools, and most critically, enforcing the data source governance by validating all tool calls against the `/datasources.yml` allow-list.
+* **Responsibility:** To serve as the dedicated and secure interface between our application and the external Cerebras API. It is responsible for loading system prompts, constructing the final request to the LLM, defining and providing the available tools, and most critically, enforcing the data source governance by validating all tool calls against the `/datasources.yml` allow-list.
 * **Key Interfaces:** Exposes a primary function to the API Layer that takes the conversation context (messages, selected model) and returns a readable stream of the AI's response.
-* **Dependencies:** Depends on the external vLLM Service for text generation and the Data Persistence Service to create an audit log of all tool calls.
+* **Dependencies:** Depends on the external Cerebras API for text generation and the Data Persistence Service to create an audit log of all tool calls.
 * **Technology Stack:** TypeScript, Vercel AI SDK, Zod (for tool parameter validation).
 
 ### Payments Service (Stripe Integration)

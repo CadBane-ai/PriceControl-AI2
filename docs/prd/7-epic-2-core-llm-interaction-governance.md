@@ -1,6 +1,6 @@
 # 7. Epic 2: Core LLM Interaction & Governance
 
-**Expanded Epic Goal:** This epic brings the financial assistant to life. It covers building the chat UI, establishing a live, streaming connection to the self-hosted vLLM service, enabling model selection, and implementing the critical data governance layer. By the end of this epic, a logged-in user will be able to have a meaningful conversation and receive trustworthy, source-governed answers.
+**Expanded Epic Goal:** This epic brings the financial assistant to life. It covers building the chat UI, establishing a live, streaming connection to the Cerebras LLM service, enabling model selection, and implementing the critical data governance layer. By the end of this epic, a logged-in user will be able to have a meaningful conversation and receive trustworthy, source-governed answers.
 
 ## Story 2.1: Basic Chat UI Scaffolding
 * **As a** user,
@@ -28,14 +28,14 @@
 
 ## Story 2.3: Create Backend AI Chat Stream
 * **As a** developer,
-* **I want** to create a backend API route that streams data from the vLLM service,
+* **I want** to create a backend API route that streams data from the Cerebras LLM service,
 * **so that** the frontend can receive and display the LLM's response.
 
 **Acceptance Criteria:**
 1.  A new API route is created at `/api/ai/route.ts`.
 2.  The route is configured to receive a list of messages from the frontend.
-3.  The route successfully connects to the self-hosted vLLM endpoint.
-4.  The route streams the response from the vLLM back to the client.
+3.  The route successfully connects to the Cerebras LLM endpoint.
+4.  The route streams the response from the Cerebras LLM back to the client.
 5.  The frontend chat interface from Story 2.2 is connected to this endpoint and successfully displays the streamed response.
 
 ## Story 2.4: Implement Dual-Model Selection
@@ -46,7 +46,7 @@
 **Acceptance Criteria:**
 1.  A UI control (e.g., a toggle or dropdown) is added to the chat interface to select "Instruct" or "Thinking" mode.
 2.  The user's selection is passed to the `/api/ai/route.ts` endpoint with each request.
-3.  The backend API uses the `mode` parameter to call the correct model on the vLLM service.
+3.  The backend API uses the `mode` parameter to call the correct model on the Cerebras LLM service.
 4.  The chat interface visually indicates which model is currently active.
 
 ## Story 2.5: Implement Data Source Registry & Governed `web.fetch` Tool

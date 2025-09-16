@@ -6,5 +6,5 @@
 * **Performance Monitoring:** Sentry for detailed transaction tracing.
 ## Key Metrics
 * **Frontend:** Core Web Vitals, JavaScript Error Rate, User Funnels.
-* **Backend:** API Error Rate, API Response Time, vLLM Service Health, Database Health.
+* **Backend:** API Error Rate, API Response Time, Database Health.
 ---
