@@ -10,7 +10,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm --filter @pricecontrol/web dev",
+    "dev": "pnpm --filter @pricecontrol/web dev -p 3000",
     "build": "pnpm --filter @pricecontrol/web build",
     "start": "pnpm --filter @pricecontrol/web start",
     "lint": "pnpm --filter @pricecontrol/web lint",

@@ -17,7 +17,8 @@ pnpm install
 pnpm dev
 ```
 
-This proxies to `apps/web` and starts the Next.js dev server.
+This proxies to `apps/web` and starts the Next.js dev server on port 3000.
+Create `apps/web/.env.local` for local env configuration (see below).
 
 ## Workspace Layout
 - `apps/web` — Next.js App Router app (imported from Vercel v0). Currently uses mock API implementations and does not require environment variables.
@@ -32,7 +33,7 @@ This project uses Neon Postgres with Drizzle ORM for migrations.
 
 Prerequisites:
 - Create a Neon Postgres database
-- Set `DATABASE_URL` locally (Neon usually needs `?sslmode=require`)
+- Set `DATABASE_URL` in `apps/web/.env.local` (Neon usually needs `?sslmode=require`)
 
 Commands (from `apps/web`):
 ```
@@ -55,7 +56,7 @@ Notes:
 ## Auth & Sessions (Story 1.5)
 This project uses NextAuth (Auth.js) with a Credentials provider and JWT sessions.
 
-Environment (local, not committed):
+Environment (local, not committed): add the following to `apps/web/.env.local`
 - `NEXTAUTH_SECRET=your-strong-secret`
 - `NEXTAUTH_URL=http://localhost:3000`
 - `DATABASE_URL=postgresql://.../db?sslmode=require` (from Story 1.2)

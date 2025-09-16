@@ -96,6 +96,21 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
             </div>
           )}
 
+          {/* Quick Account Access (temporary fallback) */}
+          <Link href="/account" title="Account" aria-label="Account">
+            <Button
+              asChild={false}
+              variant="outline"
+              size="sm"
+              className="h-8"
+            >
+              <>
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">Account</span>
+              </>
+            </Button>
+          </Link>
+
           {/* Secondary Logout Button (temporary fallback) */}
           <Button
             variant="outline"

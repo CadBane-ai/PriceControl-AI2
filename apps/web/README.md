@@ -102,17 +102,29 @@ The application uses a mock API client (`lib/api.ts`) that simulates real backen
 
 ## Environment Variables
 
-\`\`\`env
+Use a local dotenv file. Copy `.env.example` to `.env.local` and fill values. Next.js automatically loads `.env.local` in development.
+
+Required for current features:
+
+```env
+# Database (Neon Postgres example – include sslmode=require)
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DB?sslmode=require
+
+# NextAuth
+NEXTAUTH_SECRET=your-strong-secret
+NEXTAUTH_URL=http://localhost:3000
+```
+
+Optional future integrations:
+
+```env
 # Add your API base URL
 NEXT_PUBLIC_API_URL=your-api-url
 
-# Add authentication secrets
-AUTH_SECRET=your-auth-secret
-
-# Add integration keys as needed
+# LLM / Billing (planned)
 OPENAI_API_KEY=your-openai-key
 STRIPE_SECRET_KEY=your-stripe-key
-\`\`\`
+```
 
 ## Deployment
 
