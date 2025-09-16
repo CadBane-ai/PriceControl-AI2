@@ -56,7 +56,7 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
   }
 
   return (
-    <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="relative z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-4">
           <div className="md:hidden">
@@ -99,7 +99,11 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
           {/* Account Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Button
+                variant="ghost"
+                className="relative h-8 w-8 rounded-full"
+                title="Open user menu"
+              >
                 <Avatar className="h-8 w-8">
                   <AvatarFallback className="text-xs">PC</AvatarFallback>
                 </Avatar>
