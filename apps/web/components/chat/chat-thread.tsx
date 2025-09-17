@@ -18,7 +18,10 @@ export function ChatThread({ messages, isLoading = false, streamingMessage }: Ch
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    const node = bottomRef.current
+    if (node && typeof node.scrollIntoView === "function") {
+      node.scrollIntoView({ behavior: "smooth" })
+    }
   }, [messages, streamingMessage])
 
   // Mock citations for demonstration

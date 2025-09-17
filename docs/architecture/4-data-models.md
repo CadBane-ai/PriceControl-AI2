@@ -7,7 +7,8 @@
     * `email`: `string` - The user's login email, which must be unique.
     * `passwordHash`: `string` - The securely hashed password for authentication.
     * `stripeCustomerId`: `string` (nullable) - The user's unique ID in the Stripe system, linking them to their billing information.
-    * `subscriptionStatus`: `enum ('free' | 'pro')` - The user's current subscription tier, which controls access to features.
+    * `subscriptionStatus`: `enum ('free' | 'pro')` - The user's current subscription tier, which controls usage limits and upgrade prompts.
+    * `planExpiresAt`: `Date` (nullable) - When the current paid period ends; used to reconcile webhook delays and support proactive downgrade messaging.
     * `createdAt`: `Date` - Timestamp of when the user account was created.
     * `updatedAt`: `Date` - Timestamp of the last update to the user record.
 ### TypeScript Interface
@@ -17,6 +18,7 @@ export interface User {
   email: string;
   stripeCustomerId: string | null;
   subscriptionStatus: 'free' | 'pro';
+  planExpiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,5 +91,42 @@ export interface ToolCallLog {
   createdAt: Date;
 }
 ```
+
+## PasswordResetToken
+* **Purpose:** Supports the self-service password recovery flow by storing hashed one-time tokens with expirations.
+* **Relationships:** Belongs to a `User`. Multiple tokens can exist concurrently but all are invalidated when one is consumed. Tokens are removed automatically after expiration via scheduled cleanup or background jobs.
+* **Key Attributes:**
+    * `id`: `string` - Unique identifier for the token row.
+    * `userId`: `string` - Foreign key linking to the associated `User`.
+    * `tokenHash`: `string` - Secure hash of the token sent via email.
+    * `expiresAt`: `Date` - Expiration timestamp (e.g., 60 minutes after issuance).
+    * `consumedAt`: `Date` (nullable) - Timestamp when the token was used.
+    * `createdAt`: `Date` - Audit timestamp when the token was generated.
+### TypeScript Interface
+```typescript
+import type { User } from './user';
+
+export interface PasswordResetToken {
+  id: string;
+  userId: User['id'];
+  tokenHash: string;
+  expiresAt: Date;
+  consumedAt: Date | null;
+  createdAt: Date;
+}
+```
+
+## UsageCounter (Redis Backed)
+* **Purpose:** Tracks rolling daily usage totals for freemium gating without persisting every request to Postgres. Keys combine the `userId` with the UTC day.
+* **Shape:** Documented TypeScript type for the payload returned by the Usage Service.
+```typescript
+export interface UsageSummary {
+  plan: 'free' | 'pro';
+  usedToday: number;
+  dailyLimit: number;
+  resetAt: Date; // midnight UTC for the next reset
+}
+```
+* **Notes:** Backed by Upstash Redis. Counts increment inside `/api/ai` and are read via `GET /api/usage` to power the header badge, mobile account sheet, and chat footer hints in the refreshed UI spec.
 
 ---

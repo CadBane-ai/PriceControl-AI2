@@ -12,6 +12,7 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     stripe_customer_id TEXT,
     subscription_status subscription_status DEFAULT 'free',
+    plan_expires_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -44,10 +45,22 @@ CREATE TABLE tool_call_logs (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Create the password_reset_tokens table
+CREATE TABLE password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    consumed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Add indexes for faster lookups on foreign keys
 CREATE INDEX ON conversations (user_id);
 CREATE INDEX ON messages (conversation_id);
 CREATE INDEX ON tool_call_logs (conversation_id);
+CREATE INDEX ON password_reset_tokens (user_id);
+CREATE INDEX ON password_reset_tokens (expires_at);
 
 ```
 ---

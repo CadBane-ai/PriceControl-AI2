@@ -23,9 +23,10 @@ export async function POST(req: Request) {
     }
 
     const { email, password } = parsed.data;
+    const normalizedEmail = email.trim().toLowerCase();
 
     // Check if user already exists
-    const existing = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    const existing = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);
     if (existing.length > 0) {
       return NextResponse.json({ error: "User already exists" }, noStoreInit(409));
     }
@@ -34,7 +35,7 @@ export async function POST(req: Request) {
 
     const inserted = await db
       .insert(users)
-      .values({ email, passwordHash })
+      .values({ email: normalizedEmail, passwordHash })
       .returning({ id: users.id, email: users.email });
 
     return NextResponse.json(

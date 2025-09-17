@@ -17,6 +17,7 @@ export interface ChatState {
   messages: Message[]
   loading: boolean
   model: "instruct" | "reasoning"
+  modelId?: string
 }
 
 export interface Usage {

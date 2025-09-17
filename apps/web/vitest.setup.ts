@@ -2,8 +2,13 @@ import "@testing-library/jest-dom/vitest";
 import { vi } from "vitest";
 import React from "react";
 
+(globalThis as typeof globalThis & { React?: typeof React }).React = React;
+
 // Mock ScrollArea to a simple div to avoid Radix internals in JSDOM
 vi.mock("@/components/ui/scroll-area", () => {
-  const ScrollArea = ({ children }: any) => React.createElement("div", { "data-testid": "scroll-area" }, children)
+  const ScrollArea = React.forwardRef<HTMLDivElement, React.ComponentPropsWithoutRef<"div">>(
+    ({ children, ...props }, ref) => React.createElement("div", { ref, "data-testid": "scroll-area", ...props }, children)
+  )
+  ScrollArea.displayName = "ScrollArea"
   return { ScrollArea }
 })

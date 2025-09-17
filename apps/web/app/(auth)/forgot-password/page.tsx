@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { forgotPasswordSchema, type ForgotPasswordFormData } from "@/lib/validators"
 import { apiClient } from "@/lib/api"
 import { Loader2, ArrowLeft, CheckCircle } from "lucide-react"
+import { GoogleSignInButton } from "@/components/auth/google-signin-button"
 
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -69,6 +70,7 @@ export default function ForgotPasswordPage() {
                 Back to sign in
               </Link>
             </div>
+            <GoogleSignInButton className="w-full" />
           </div>
         </CardContent>
       </Card>
@@ -99,11 +101,14 @@ export default function ForgotPasswordPage() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-4">
           <Link href="/login" className="inline-flex items-center text-sm text-primary hover:underline">
             <ArrowLeft className="mr-1 h-4 w-4" />
             Back to sign in
           </Link>
+          <div>
+            <GoogleSignInButton className="w-full" />
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -19,3 +19,4 @@
 - [16. Error Handling Strategy](./16-error-handling-strategy.md)
 - [17. Monitoring and Observability](./17-monitoring-and-observability.md)
 - [18. Checklist Results Report](./18-checklist-results-report.md)
+- [19. Model Management](./19-model-management.md)

@@ -1,12 +1,27 @@
 # 7. External APIs
 
-## Cerebras API
-* **Purpose:** To provide the core AI text generation capabilities for the application.
-* **Documentation:** The Cerebras API is an OpenAI-compatible API.
-* **Base URL(s):** To be defined in the `CEREBRAS_API_URL` environment variable.
-* **Authentication:** A static API key, stored in the `CEREBRAS_API_KEY` environment variable, will be used to secure the endpoint from public access.
+## OpenRouter (Cerebras Provider)
+* **Purpose:** Initial LLM access layer to use Cerebras-hosted models via a unified API.
+* **Documentation:** https://openrouter.ai/docs
+* **Base URL(s):** `https://openrouter.ai/api/v1` (configurable via `OPENROUTER_BASE_URL`).
+* **Authentication:** `OPENROUTER_API_KEY` bearer token. Recommended attribution headers: `HTTP-Referer` (site URL) and `X-Title` (app name).
 * **Key Endpoints Used:**
-    * `POST /v1/chat/completions` - The standard endpoint for generating streaming chat responses.
+    * `POST /chat/completions` with `stream=true` for streaming responses.
+* **Provider Selection:** Force Cerebras execution with `{ provider: { only: ["Cerebras"] } }`.
+
+## Future: Direct Cerebras API
+* **Purpose:** Scale-up option to call Cerebras directly when needed.
+* **Compatibility:** The backend route is structured so we can swap the OpenRouter call for a direct Cerebras implementation with minimal changes.
+* **Authentication/Endpoints:** To be finalized when enabling direct integration.
+
+## Google OAuth
+* **Purpose:** Optional social sign-in provider that augments email/password authentication through NextAuth.
+* **Documentation:** https://developers.google.com/identity/protocols/oauth2
+* **Base URL(s):** https://accounts.google.com and https://oauth2.googleapis.com token endpoints (managed by NextAuth).
+* **Authentication:** Requires `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. Tokens are exchanged server-side by NextAuth.
+* **Key Endpoints Used:**
+    * OAuth 2.0 Authorization Endpoint (user redirect).
+    * OAuth 2.0 Token Endpoint (handled server-side by NextAuth).
 
 ## Stripe API
 * **Purpose:** To handle all payment processing, including creating subscription checkouts and managing customer billing information.
@@ -16,6 +31,27 @@
 * **Key Endpoints Used:**
     * `POST /v1/checkout/sessions` - To create a new checkout session for a user to subscribe.
     * `POST /v1/billing_portal/sessions` - To create a session for the customer portal.
+    * Webhook events: `checkout.session.completed`, `invoice.paid`, `customer.subscription.updated`, `customer.subscription.deleted` – delivered to `/api/stripe/webhook`.
+* **Notes:** Webhook requests require raw-body parsing and signature verification (`Stripe-Signature` header). Stripe CLI assists with local testing by forwarding events.
+
+## Resend (Transactional Email)
+* **Purpose:** Deliver password reset emails and other transactional notifications.
+* **Documentation:** https://resend.com/docs
+* **Base URL(s):** `https://api.resend.com` (managed via SDK).
+* **Authentication:** `RESEND_API_KEY` stored in environment variables; emails sent from `MAIL_FROM`.
+* **Key Endpoints Used:**
+    * `POST /emails` – Send password reset email using the `password-reset` template with reset link `${NEXTAUTH_URL}/reset-password?token=...`.
+* **Notes:** Emails should include a clear expiry window (e.g., 1 hour). Sandbox mode can be toggled for development.
+
+## Upstash Redis (Usage & Rate Limiting)
+* **Purpose:** Store short-lived counters for password reset throttling and daily usage tallies for freemium gating.
+* **Documentation:** https://upstash.com/docs/redis
+* **Base URL(s):** Project-specific REST endpoint (configurable via `UPSTASH_REDIS_REST_URL`).
+* **Authentication:** `UPSTASH_REDIS_REST_TOKEN` bearer token.
+* **Key Operations:**
+    * `INCR` + `EXPIRE` per `password-reset:{userId}` and `password-reset:ip:{hash}` keys.
+    * `INCR` + `EXPIRE` per `usage:{userId}:{yyyy-mm-dd}` key with TTL aligned to midnight UTC.
+* **Notes:** Rate limiter helper wraps these calls; ensure retries are idempotent and add observability via metrics exported to logging pipeline.
 
 ## Financial Data APIs (Governed by Source Registry)
 * **Purpose:** To provide the raw financial, economic, and political data required by the LLM to answer user queries. This is a collection of diverse external sources.

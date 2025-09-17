@@ -8,6 +8,34 @@
       "when": 1757857429940,
       "tag": "0000_majestic_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1758019708865,
+      "tag": "0001_milky_trauma",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758020447220,
+      "tag": "0002_spicy_scream",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758025000000,
+      "tag": "0003_password_reset_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1758033600000,
+      "tag": "0004_subscription_enhancements",
+      "breakpoints": true
     }
   ]
 }

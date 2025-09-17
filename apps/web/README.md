@@ -75,7 +75,7 @@ lib/
 
 ### Dashboard
 - Collapsible sidebar with conversation list
-- Model selector (Instruct/Reasoning)
+- Model picker with grouped models, descriptions, and tooltips
 - Usage meter with upgrade prompts
 - Analytics overview with charts
 
@@ -115,16 +115,32 @@ NEXTAUTH_SECRET=your-strong-secret
 NEXTAUTH_URL=http://localhost:3000
 ```
 
-Optional future integrations:
+Optional feature toggles:
 
 ```env
 # Add your API base URL
 NEXT_PUBLIC_API_URL=your-api-url
 
-# LLM / Billing (planned)
-OPENAI_API_KEY=your-openai-key
+# LLM via OpenRouter (enable to replace the mock stream)
+OPENROUTER_API_KEY=your-openrouter-key
+# Optional overrides
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+OPENROUTER_SITE_URL=http://localhost:3000
+OPENROUTER_APP_NAME=PriceControl
+
+# Google OAuth provider for NextAuth
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# Future: direct Cerebras (keep commented until needed)
+# CEREBRAS_API_KEY=
+# CEREBRAS_BASE_URL=
+
+# Billing (planned)
 STRIPE_SECRET_KEY=your-stripe-key
 ```
+
+> Tip: When `OPENROUTER_API_KEY` is not set the `/api/ai` route returns a mock stream, which keeps local development unblocked. Setting the Google credentials automatically surfaces the Google sign-in button on the login screen.
 
 ## Deployment
 
@@ -155,3 +171,30 @@ The application is ready for deployment on Vercel:
 ## License
 
 This project is created for demonstration purposes.
+
+## Model Management (Developers)
+
+The chat model picker (similar to ChatGPT) is driven by a simple configuration file so you can add, group, and describe models without touching UI code.
+
+- Edit `apps/web/lib/models.ts`:
+  - `OPENROUTER_MODEL_GROUPS`: groups and model options shown in the dropdown. Each option supports:
+    - `id`: OpenRouter model ID (e.g., `meta-llama/llama-3.3-70b-instruct`)
+    - `label`: display text
+    - `description`: small subtitle
+    - `tooltip`: hover text for an info icon
+    - `mode`: optional (`instruct` | `reasoning`) hint used to infer the UI mode
+  - `OPENROUTER_MODELS`: default models for the two top-level modes (used for initial selection/fallbacks)
+  - `resolveModelForMode(mode)`: returns a default model ID if `model` is not explicitly provided
+  - `findOptionById(id)`: helps infer `mode` from a selected `model`
+
+The default configuration includes the full Cerebras production lineup exposed via OpenRouter:
+
+- Llama 3.3 8B Instruct — fast, low-cost default (`meta-llama/llama-3.3-8b-instruct`)
+- Llama 3.1 8B Instruct — compatibility fallback for 3.1-era flows (`meta-llama/llama-3.1-8b-instruct`)
+- Llama 3.3 70B Instruct — flagship reasoning model (`meta-llama/llama-3.3-70b-instruct`)
+- Llama 3.1 70B Instruct — battle-tested 70B fallback (`meta-llama/llama-3.1-70b-instruct`)
+- Llama 3.1 405B Instruct — highest quality option for deep analysis (`meta-llama/llama-3.1-405b-instruct`)
+
+The server route `/api/ai` accepts `model` and `mode` in the request body. If `model` is omitted, it falls back to `resolveModelForMode(mode)`. We use OpenRouter with `provider.only = ["Cerebras"]` by default. You can later replace the OpenRouter call with direct Cerebras SDK calls without changing the client contract.
+
+See also: `docs/architecture/19-model-management.md` for a short overview.

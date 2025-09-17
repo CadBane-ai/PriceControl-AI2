@@ -2,6 +2,8 @@
 
 **Expanded Epic Goal:** This epic brings the financial assistant to life. It covers building the chat UI, establishing a live, streaming connection to the Cerebras LLM service, enabling model selection, and implementing the critical data governance layer. By the end of this epic, a logged-in user will be able to have a meaningful conversation and receive trustworthy, source-governed answers.
 
+Architecture Link: See `docs/architecture/19-model-management.md` for how available chat models are curated and exposed in the UI.
+
 ## Story 2.1: Basic Chat UI Scaffolding
 * **As a** user,
 * **I want** a clean and intuitive layout for the chat interface,
@@ -28,15 +30,15 @@
 
 ## Story 2.3: Create Backend AI Chat Stream
 * **As a** developer,
-* **I want** to create a backend API route that streams data from the Cerebras LLM service,
+* **I want** to create a backend API route that streams data from the Cerebras LLM service via OpenRouter,
 * **so that** the frontend can receive and display the LLM's response.
 
 **Acceptance Criteria:**
-1.  A new API route is created at `/api/ai/route.ts`.
-2.  The route is configured to receive a list of messages from the frontend.
-3.  The route successfully connects to the Cerebras LLM endpoint.
-4.  The route streams the response from the Cerebras LLM back to the client.
-5.  The frontend chat interface from Story 2.2 is connected to this endpoint and successfully displays the streamed response.
+1.  A new API route is created at `/api/ai/route.ts` (exposed as `/api/ai`).
+2.  The route accepts a JSON body containing the chat message list plus optional `conversationId`, `mode`, and explicit `model` overrides.
+3.  Requests require an authenticated NextAuth session; unauthenticated calls return `401 Unauthorized`.
+4.  When `OPENROUTER_API_KEY` is present, the route connects to OpenRouter with the Cerebras provider and streams tokens back to the client; otherwise a mock streaming message is returned for local development.
+5.  Streaming responses are surfaced to the client using Vercel's `useChat` hook, and the Story 2.2 chat UI renders the incremental tokens.
 
 ## Story 2.4: Implement Dual-Model Selection
 * **As a** user,
@@ -44,10 +46,10 @@
 * **so that** I can use the right tool for the job.
 
 **Acceptance Criteria:**
-1.  A UI control (e.g., a toggle or dropdown) is added to the chat interface to select "Instruct" or "Thinking" mode.
-2.  The user's selection is passed to the `/api/ai/route.ts` endpoint with each request.
-3.  The backend API uses the `mode` parameter to call the correct model on the Cerebras LLM service.
-4.  The chat interface visually indicates which model is currently active.
+1.  The chat top bar exposes a model picker dropdown populated from the curated `OPENROUTER_MODEL_GROUPS` configuration, grouping models with labels, descriptions, and tooltips.
+2.  The picker defaults to the instruct model defined in `OPENROUTER_MODELS` and clearly shows the currently selected option.
+3.  Selecting a model updates local state and infers the high-level `mode` when the option specifies one, keeping the UI and request payload in sync.
+4.  Every chat submission sends both `mode` and `model` fields to `/api/ai`, ensuring the backend streams from the chosen OpenRouter/Cerebras model.
 
 ## Story 2.5: Implement Data Source Registry & Governed `web.fetch` Tool
 * **As a** developer,
@@ -74,3 +76,20 @@
 4.  The final response streamed to the user includes a clear citation of the source ID and/or URL that was used to generate the answer.
 
 ---
+
+## Story 2.7: Create, Switch, and Rename Conversations
+* As a user,
+* I want to create new conversations and switch between them,
+* so that I can keep different topics separated and return to them later.
+
+Acceptance Criteria:
+1. Authenticated routes exist at `GET /api/conversations` and `POST /api/conversations`; both require a valid NextAuth session and return 401 otherwise. Creating without a title defaults to "Untitled conversation".
+2. Conversations are persisted with Drizzle using fields `id`, `userId`, `title`, `createdAt`, `updatedAt`, and responses sort by latest `updatedAt` to surface recent threads first.
+3. The sidebar "New conversation" button calls the POST endpoint, prepends the returned conversation locally, navigates to `/dashboard?conversation={id}`, and fires a confirmation toast.
+4. The sidebar renders the user's conversations with recency badges (Today/Yesterday/date) and highlights the entry matching the `conversation` query parameter.
+5. Users can rename conversations via a dialog that calls `PATCH /api/conversations/{id}` with a trimmed title; success updates the local list and shows a toast, while blank titles are rejected with a validation error.
+6. Security & errors: unauthorized requests receive 401, invalid rename payloads return 400, and unknown conversation IDs return 404.
+7. Tests: unit/integration coverage ensures auth gating, creation/list ordering, rename success/error paths, plus a UI test covering new conversation creation, navigation, and rename feedback.
+
+Notes:
+- Message persistence is defined in the architecture and will be handled in subsequent stories (e.g., when hooking up the streaming response in Story 2.3 and beyond).

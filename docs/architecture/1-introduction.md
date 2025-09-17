@@ -16,5 +16,6 @@ This choice accelerates initial setup and enforces end-to-end type safety.
 | Date | Version | Description | Author |
 | :--- | :--- | :--- | :--- |
 | 2025-09-05 | 1.0 | Initial architecture draft. | Winston (Architect) |
+| 2025-09-12 | 1.1 | Updated for PRD v4 and revised UI spec (usage metering, password reset, Stripe upgrade loop, data source transparency). | Winston (Architect) |
 
 ---

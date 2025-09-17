@@ -58,11 +58,12 @@
 * **so that** existing users can authenticate and establish a session.
 
 **Acceptance Criteria:**
-1.  A new API route is created at `/api/auth/login`.
-2.  The endpoint accepts a POST request with an email and password.
-3.  The endpoint verifies the user's credentials against the stored hashed password.
-4.  Upon successful authentication, a session (e.g., using Auth.js/NextAuth) is created and a session cookie is returned to the client.
-5.  An appropriate error response is returned for invalid credentials.
+1.  NextAuth is configured with a Credentials provider that validates email/password combinations against the Neon database using bcrypt.
+2.  The NextAuth handler is exposed at `/api/auth/[...nextauth]` with the JWT session strategy and a shared secret.
+3.  The helper endpoint at `/api/auth/login` accepts a JSON payload, validates it with zod, and responds with guidance to use the NextAuth Credentials callback.
+4.  Successful credential sign-in issues a secure session cookie that server routes can rely on for authenticated requests.
+5.  Invalid credentials return a generic error without revealing whether the email exists.
+6.  When `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set, the Google OAuth provider is registered and surfaced through `GET /api/auth/providers`.
 
 ## Story 1.6: Connect UI to Auth & Protect Routes
 * **As a** user,
@@ -70,11 +71,26 @@
 * **so that** I can confirm the authentication system works end-to-end.
 
 **Acceptance Criteria:**
-1.  The sign-up form from Story 1.3 is connected to the registration API from Story 1.4.
-2.  The login form from Story 1.3 is connected to the login API from Story 1.5.
-3.  After a successful sign-up or login, the user is redirected to a new `/dashboard` page.
-4.  The `/dashboard` page is a protected route; unauthenticated users trying to access it are redirected to the login page.
-5.  A logged-in user can see a simple "Welcome" message and a logout button on the dashboard.
-6.  Clicking the logout button ends the user's session and redirects them to the login page.
+1.  The sign-up form from Story 1.3 posts to `/api/auth/register`, surfaces success and error toasts, and redirects to login on success.
+2.  The login form from Story 1.3 calls `signIn("credentials")` from NextAuth, handles success and failure without a full-page reload, and shows appropriate toasts.
+3.  After a successful sign-up or login (including OAuth flows), the user is redirected to `/dashboard` or the `next` query parameter target.
+4.  The `/dashboard` page uses NextAuth session checks to enforce authentication, redirecting unauthenticated visitors to `/login`.
+5.  The login experience renders a Google sign-in button via NextAuth and surfaces provider-specific error messages when Google OAuth fails.
+6.  Logging out triggers NextAuth `signOut`, clears the session cookie, and returns the user to the login page.
+
+---
+
+## Story 1.7: Self-Service Password Recovery
+* **As a** user who has forgotten their password,
+* **I want** a secure, self-service flow to request a reset link and set a new password,
+* **so that** I can regain access without contacting support.
+
+**Acceptance Criteria:**
+1.  The login screen links to a `/forgot-password` route that renders a form (email field with validation, submit button) built with the shared auth card layout.
+2.  Submitting the form calls the password-reset request endpoint, shows an in-place success state confirming the destination email, and offers a "Try again" action plus navigation back to `/login`.
+3.  The success state and primary form both surface a "Continue with Google" button using the shared OAuth component, keeping alternative sign-in options available.
+4.  A `/reset-password` route accepts a `token` query parameter; missing or invalid tokens immediately redirect users back to `/forgot-password` with an error toast.
+5.  The reset form collects a new password and confirmation, enforces matching values, calls the reset endpoint, and on success routes the user to `/login` with a confirmation toast.
+6.  Authentication error handling is centralized in an `(auth)/error` page that interprets common NextAuth error codes (e.g., OAuth failures) and provides quick links back to `/login` or retrying Google sign-in.
 
 ---

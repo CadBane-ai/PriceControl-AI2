@@ -1,0 +1,62 @@
+import { randomBytes, createHash } from "crypto";
+import { and, eq, gt, isNull } from "drizzle-orm";
+import { db } from "@/db/client";
+import { passwordResetTokens } from "@/db/schema/password-reset-tokens";
+import { users } from "@/db/schema/users";
+
+const RESET_TOKEN_BYTES = 32;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+export function generateResetToken(): { token: string; hash: string; expiresAt: Date } {
+  const token = randomBytes(RESET_TOKEN_BYTES).toString("base64url");
+  const hash = hashToken(token);
+  const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+  return { token, hash, expiresAt };
+}
+
+export function hashToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+export async function createPasswordResetToken(userId: string) {
+  const { token, hash, expiresAt } = generateResetToken();
+
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(passwordResetTokens)
+      .where(and(eq(passwordResetTokens.userId, userId), isNull(passwordResetTokens.consumedAt)));
+
+    await tx.insert(passwordResetTokens).values({
+      userId,
+      tokenHash: hash,
+      expiresAt,
+    });
+  });
+
+  return { token, expiresAt };
+}
+
+export async function findUserByEmail(email: string) {
+  const normalized = email.trim().toLowerCase();
+  const result = await db.select().from(users).where(eq(users.email, normalized)).limit(1);
+  return result[0];
+}
+
+export async function consumePasswordResetToken(token: string) {
+  const hash = hashToken(token);
+  const now = new Date();
+  const record = await db
+    .select()
+    .from(passwordResetTokens)
+    .where(
+      and(
+        eq(passwordResetTokens.tokenHash, hash),
+        gt(passwordResetTokens.expiresAt, now),
+        isNull(passwordResetTokens.consumedAt)
+      )
+    )
+    .limit(1);
+  return record[0];
+}
+
+export const RESET_TOKEN_TTL_MINUTES = RESET_TOKEN_TTL_MS / 60000;

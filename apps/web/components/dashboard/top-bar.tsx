@@ -11,7 +11,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Info } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Sidebar } from "./sidebar"
 import { useTheme } from "next-themes"
@@ -20,13 +22,16 @@ import type { Usage } from "@/lib/types"
 import { User, Settings, LogOut, Sun, Moon, Zap } from "lucide-react"
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
+import { GoogleSignInButton } from "@/components/auth/google-signin-button"
+
+import { OPENROUTER_MODEL_GROUPS } from "@/lib/models"
 
 interface TopBarProps {
-  model: "instruct" | "reasoning"
-  onModelChange: (model: "instruct" | "reasoning") => void
+  modelId: string
+  onModelIdChange: (modelId: string) => void
 }
 
-export function TopBar({ model, onModelChange }: TopBarProps) {
+export function TopBar({ modelId, onModelIdChange }: TopBarProps) {
   const [usage, setUsage] = useState<Usage | null>(null)
   const { theme, setTheme } = useTheme()
   const { data: session } = useSession()
@@ -64,20 +69,44 @@ export function TopBar({ model, onModelChange }: TopBarProps) {
             <Sidebar />
           </div>
 
-          {/* Model Selector - responsive sizing */}
-          <Tabs value={model} onValueChange={(value) => onModelChange(value as "instruct" | "reasoning")}>
-            <TabsList className="grid w-full grid-cols-2 h-8">
-              <TabsTrigger value="instruct" className="text-xs px-2 py-1">
-                Instruct
-              </TabsTrigger>
-              <TabsTrigger value="reasoning" className="text-xs px-2 py-1">
-                Reasoning
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Model Picker (similar to ChatGPT) */}
+          <Select value={modelId} onValueChange={onModelIdChange}>
+            <SelectTrigger className="h-8 w-[260px] text-xs">
+              <SelectValue placeholder="Select model" />
+            </SelectTrigger>
+            <SelectContent>
+              {OPENROUTER_MODEL_GROUPS.map((group) => (
+                <SelectGroup key={group.key}>
+                  <SelectLabel>{group.label}</SelectLabel>
+                  {group.options.map((opt) => (
+                    <SelectItem key={opt.id} value={opt.id} className="text-xs">
+                      <span className="flex items-start justify-between gap-2 w-full">
+                        <span className="flex flex-col">
+                          <span>{opt.label}</span>
+                          {opt.description && (
+                            <span className="text-[10px] text-muted-foreground">{opt.description}</span>
+                          )}
+                        </span>
+                        {opt.tooltip && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Info className="h-3.5 w-3.5 mt-0.5 opacity-60" />
+                            </TooltipTrigger>
+                            <TooltipContent sideOffset={6}>{opt.tooltip}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2 md:gap-4">
+          {/* If not signed in (e.g., on public pages), show quick Google sign-in */}
+          {!session?.user && <GoogleSignInButton label="Sign in with Google" size="sm" className="h-8 text-xs" />}
           {/* Usage Meter - hide on very small screens */}
           {usage && (
             <div className="hidden sm:flex items-center gap-2">

@@ -10,26 +10,40 @@ graph TD
         D[Data Persistence Service <br> Drizzle ORM]
         E[LLM Gateway Service]
         F[Payments Service <br> Stripe Integration]
+        G[Usage Service]
+        H[Password Reset Service]
+        I[Transparency Service]
     end
 
     subgraph "External Systems"
-        G[User's Browser]
-        H[Cerebras API]
-        I[Stripe API]
-        J[Financial Data APIs]
-        K[Neon Postgres DB]
+        J[User's Browser]
+        K[OpenRouter (Cerebras Provider)]
+        L[Stripe API & Webhooks]
+        M[Financial Data APIs]
+        N[Neon Postgres DB]
+        O[Upstash Redis]
+        P[Resend Email]
+        Q[datasources.yml]
     end
 
-    G --> A;
+    J --> A;
     A --> B;
     B --> C;
+    B --> D;
     B --> E;
     B --> F;
+    B --> G;
+    B --> H;
+    B --> I;
     C --> D;
-    D --> K;
-    E --> H;
-    E --> J;
-    F --> I;
+    D --> N;
+    E --> K;
+    E --> M;
+    F --> L;
+    G --> O;
+    H --> O;
+    H --> P;
+    I --> Q;
 ```
 
 ## Component List
@@ -47,10 +61,18 @@ graph TD
 * **Technology Stack:** Next.js `~14.2` API Routes, TypeScript, Zod (for request validation).
 
 ### Authentication Service (NextAuth.js)
-* **Responsibility:** To handle all aspects of user authentication and session management. Its sole responsibility is to verify user identities, create and manage secure sessions (e.g., via cookies), and provide the API Layer with the mechanisms to protect endpoints.
-* **Key Interfaces:** Exposes middleware and helper functions used by the API Layer to protect routes. It also provides both the client and server components with the current user's session state.
+* **Responsibility:** To handle all aspects of user authentication and session management. Its sole responsibility is to verify user identities, create and manage secure sessions (e.g., via cookies), and provide the API Layer with the mechanisms to protect endpoints. It manages both email/password credentials and Google OAuth sign-in when the provider is configured.
+* **Key Interfaces:** Exposes middleware and helper functions used by the API Layer to protect routes. It also provides both the client and server components with the current user's session state and the list of configured providers (used to toggle Google sign-in on the UI).
 * **Dependencies:** Depends on the Data Persistence Service to retrieve and verify user credentials.
-* **Technology Stack:** NextAuth.js `~5.0`.
+* **Technology Stack:** NextAuth.js `~5.0`, NextAuth Credentials provider, Google OAuth (via `next-auth/providers/google`).
+
+### Password Reset Service
+* **Responsibility:** Issue and manage self-service password reset flows. Generates single-use reset tokens, persists them with expirations, dispatches email via Resend, and validates tokens when users set a new password. Invalidates outstanding tokens and revokes sessions after a successful reset.
+* **Key Interfaces:**
+  * `POST /api/auth/forgot-password` – accepts user email, enforces rate limiting, creates token records, and enqueues email delivery.
+  * `POST /api/auth/reset-password` – accepts `token` + `newPassword`, validates token hash/expiry, updates `users.passwordHash`, and marks tokens as consumed.
+* **Dependencies:** Drizzle ORM (`password_reset_tokens` table), NextAuth (for session revocation), Resend API (email delivery), Upstash Redis (per-account/IP throttling for requests).
+* **Technology Stack:** Next.js API routes, Drizzle ORM, Resend Node SDK, crypto utilities for token hashing, Upstash Redis rate limiter.
 
 ### Data Persistence Service (Drizzle + Neon)
 * **Responsibility:** To manage all interactions with the Neon Postgres database. It is responsible for executing queries, managing schema migrations, and providing a type-safe data access layer for other services. It ensures the application's business logic is decoupled from the raw database implementation.
@@ -59,13 +81,29 @@ graph TD
 * **Technology Stack:** Drizzle ORM `~0.30`, Neon Serverless Driver, Postgres `16`.
 
 ### LLM Gateway Service
-* **Responsibility:** To serve as the dedicated and secure interface between our application and the external Cerebras API. It is responsible for loading system prompts, constructing the final request to the LLM, defining and providing the available tools, and most critically, enforcing the data source governance by validating all tool calls against the `/datasources.yml` allow-list.
-* **Key Interfaces:** Exposes a primary function to the API Layer that takes the conversation context (messages, selected model) and returns a readable stream of the AI's response.
-* **Dependencies:** Depends on the external Cerebras API for text generation and the Data Persistence Service to create an audit log of all tool calls.
-* **Technology Stack:** TypeScript, Vercel AI SDK, Zod (for tool parameter validation).
+* **Responsibility:** Dedicated and secure interface between our app and the LLM provider. Initially integrates with OpenRouter to access Cerebras-hosted models; structured to support direct Cerebras API later. Loads prompts, constructs requests, defines tools, and enforces data-source governance (`/datasources.yml`).
+* **Key Interfaces:** Streams responses to the API Layer from `/api/ai`. Accepts `messages`, optional `mode`, and explicit `model` (OpenRouter model ID). Returns a readable token stream.
+* **Dependencies:** Depends on OpenRouter (Cerebras provider) for inference today; later, may call Cerebras API directly. Depends on Data Persistence for conversation/message storage and tool-call audit logs (future stories).
+* **Technology Stack:** TypeScript, Vercel AI SDK (OpenAIStream/StreamingTextResponse), Zod (validation).
+
+### Usage Service
+* **Responsibility:** Track per-user chat consumption for freemium gating and surface usage summaries to the UI. Coordinates with the LLM Gateway to increment counters, enforces daily limits, and returns aggregated usage metrics for the dashboard badge.
+* **Key Interfaces:**
+  * Internal helper invoked by `/api/ai` before streaming responses to ensure a request is within quota (`recordUsage(userId)` returning remaining quota or throwing limit errors).
+  * `GET /api/usage` endpoint that returns `{ plan, usedToday, dailyLimit }` for the authenticated user.
+* **Dependencies:** Upstash Redis (or alternative low-latency store) for per-user day buckets, Stripe subscription data (via Payments Service) to determine plan limits, Drizzle ORM if long-term usage analytics are persisted.
+* **Technology Stack:** Next.js API routes, Upstash Redis REST API, TypeScript business logic, Zod validation.
+
+### Transparency Service (Data Source Registry)
+* **Responsibility:** Surface the governed data-source registry to both the AI tools and the UI. Ensures `/datasources.yml` is parsed, cached, and available for validation and display.
+* **Key Interfaces:**
+  * Provides `isAllowedSource(sourceId)` guard used by the LLM Gateway prior to invoking `web.fetch`.
+  * `GET /api/datasources` exposes the parsed registry to the Data Sources Directory UI with categories, cadence, and policy metadata.
+* **Dependencies:** Reads from the repo-level `datasources.yml`, caches parsed content in memory (and optionally in Redis) with change detection, and shares utility functions with the governance checks in the LLM Gateway.
+* **Technology Stack:** TypeScript parser for YAML (`yaml` package), shared governance utilities, caching via in-process memoization or Redis, shadcn/ui table components on the frontend.
 
 ### Payments Service (Stripe Integration)
-* **Responsibility:** To handle all interactions related to billing and subscriptions. It is responsible for creating Stripe Checkout sessions for new subscriptions and processing incoming webhooks from Stripe to update a user's subscription status in our database.
+* **Responsibility:** Handle billing lifecycle: create Stripe Checkout sessions, launch billing portal sessions, and reconcile webhooks that mutate subscription status and `plan_expires_at` columns.
 * **Key Interfaces:** Exposes an internal API consumed by the main API Layer to initiate payments. It also exposes a public webhook endpoint to receive events directly from the Stripe API.
 * **Dependencies:** Depends on the external Stripe API for all payment processing and on the Data Persistence Service to update the `User` model with subscription changes.
 * **Technology Stack:** Stripe Node.js library, Next.js API Routes.

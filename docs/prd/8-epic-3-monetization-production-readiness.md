@@ -68,4 +68,17 @@
 2.  Sentry is configured for the production environment to automatically capture and report all unhandled exceptions from both the frontend and backend.
 3.  A test exception thrown from the API is successfully captured and displayed in the Sentry dashboard.
 
+## Story 3.7: Surface Usage Meter & Upgrade Prompts In-App
+* **As a** free-tier user,
+* **I want** to see how many requests I have left and be nudged to upgrade when I get close to the limit,
+* **so that** I can plan ahead and avoid unexpected lockouts.
+
+**Acceptance Criteria:**
+1.  The chat header renders a usage badge for authenticated users showing `usedToday/dailyLimit` and updates itself after fetching `/api/usage` (or the equivalent usage endpoint).
+2.  Badge styling reflects thresholds: default under 70%, secondary between 70–90%, destructive at 90%+, matching the UI implementation (Zap icon + Badge variants).
+3.  When the plan is `free` and usage crosses 80% of the limit, an "Upgrade" call-to-action is rendered next to the badge on desktop and exposed through the account dropdown on smaller screens, linking to the billing/upgrade route.
+4.  Usage fetch failures fail gracefully (badge hidden, console diagnostics retained) without breaking the surrounding header UI.
+5.  The account dropdown consolidates quick navigation (Account, Billing), provides a theme toggle, and includes a prominent "Log out" action; on mobile it also mirrors the usage badge so the limit is discoverable.
+6.  When the session is absent (public pages), the header replaces authenticated controls with a compact "Continue with Google" button so visitors can initiate OAuth directly.
+
 ---

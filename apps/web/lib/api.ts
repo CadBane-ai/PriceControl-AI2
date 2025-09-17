@@ -26,34 +26,56 @@ export class ApiClient {
   }
 
   async forgotPassword(email: string): Promise<void> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Mock forgot password:", { email })
+    const res = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      cache: "no-store",
+      body: JSON.stringify({ email }),
+    })
+    if (!res.ok && res.status !== 202) {
+      throw new Error(`Failed to request password reset: ${res.status}`)
+    }
   }
 
-  async resetPassword(token: string, _password: string): Promise<void> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    console.log("Mock reset password:", { token })
+  async resetPassword(token: string, password: string): Promise<void> {
+    const res = await fetch("/api/auth/reset-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+      cache: "no-store",
+      body: JSON.stringify({ token, password }),
+    })
+    if (!res.ok && res.status !== 204) {
+      throw new Error(`Failed to reset password: ${res.status}`)
+    }
   }
 
   async getConversations(): Promise<Conversation[]> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    return [
-      {
-        id: "1",
-        title: "Market Analysis Q4 2024",
-        createdAt: new Date(Date.now() - 86400000).toISOString(),
-        updatedAt: new Date(Date.now() - 86400000).toISOString(),
-      },
-      {
-        id: "2",
-        title: "Portfolio Optimization",
-        createdAt: new Date(Date.now() - 172800000).toISOString(),
-        updatedAt: new Date(Date.now() - 172800000).toISOString(),
-      },
-    ]
+    const res = await fetch("/api/conversations", { cache: "no-store" })
+    if (!res.ok) throw new Error(`Failed to load conversations: ${res.status}`)
+    const data = await res.json()
+    return data.conversations as Conversation[]
+  }
+
+  async createConversation(title?: string): Promise<Conversation> {
+    const res = await fetch("/api/conversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    })
+    if (!res.ok) throw new Error(`Failed to create conversation: ${res.status}`)
+    const data = await res.json()
+    return data.conversation as Conversation
+  }
+
+  async renameConversation(id: string, title: string): Promise<Conversation> {
+    const res = await fetch(`/api/conversations/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title }),
+    })
+    if (!res.ok) throw new Error(`Failed to rename conversation: ${res.status}`)
+    const data = await res.json()
+    return data.conversation as Conversation
   }
 
   async getMessages(_conversationId: string): Promise<Message[]> {
@@ -101,13 +123,12 @@ export class ApiClient {
   }
 
   async getUsage(): Promise<Usage> {
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    return {
-      plan: "free",
-      usedToday: 15,
-      dailyLimit: 50,
+    const res = await fetch("/api/usage", { cache: "no-store" })
+    if (!res.ok) {
+      throw new Error(`Failed to load usage summary: ${res.status}`)
     }
+    const data = await res.json()
+    return data as Usage
   }
 
   async createCheckoutSession(): Promise<{ url: string }> {

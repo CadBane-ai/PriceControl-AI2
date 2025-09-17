@@ -12,6 +12,7 @@ import { FormField } from "@/components/ui/form-field"
 import { useToast } from "@/hooks/use-toast"
 import { signupSchema, type SignupFormData } from "@/lib/validators"
 import { Loader2 } from "lucide-react"
+import { GoogleSignInButton } from "@/components/auth/google-signin-button"
 
 export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -85,11 +86,19 @@ export default function SignupPage() {
           </Button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
-          <span className="text-muted-foreground">Already have an account? </span>
-          <Link href="/login" className="text-primary hover:underline font-medium">
-            Sign in
-          </Link>
+        <div className="mt-6 space-y-4">
+          <div className="relative text-center">
+            <span className="bg-background px-2 text-xs text-muted-foreground relative z-10">or continue with</span>
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t" />
+          </div>
+          <GoogleSignInButton className="w-full" label="Continue with Google" callbackUrl="/dashboard" />
+
+          <div className="text-center text-sm">
+            <span className="text-muted-foreground">Already have an account? </span>
+            <Link href="/login" className="text-primary hover:underline font-medium">
+              Sign in
+            </Link>
+          </div>
         </div>
       </CardContent>
     </Card>
