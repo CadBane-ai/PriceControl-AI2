@@ -15,7 +15,9 @@ export function generateResetToken(): { token: string; hash: string; expiresAt: 
 }
 
 export function hashToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
+  const secret = process.env.PASSWORD_RESET_TOKEN_SECRET;
+  const payload = secret ? `${secret}:${token}` : token;
+  return createHash("sha256").update(payload).digest("hex");
 }
 
 export async function createPasswordResetToken(userId: string) {
@@ -42,12 +44,20 @@ export async function findUserByEmail(email: string) {
   return result[0];
 }
 
-export async function consumePasswordResetToken(token: string) {
-  const hash = hashToken(token);
+type PasswordResetExecutor = {
+  update: typeof db.update;
+};
+
+export async function consumePasswordResetToken(
+  token: string,
+  executor: PasswordResetExecutor = db,
+  tokenHash?: string
+) {
+  const hash = tokenHash ?? hashToken(token);
   const now = new Date();
-  const record = await db
-    .select()
-    .from(passwordResetTokens)
+  const [record] = await executor
+    .update(passwordResetTokens)
+    .set({ consumedAt: now })
     .where(
       and(
         eq(passwordResetTokens.tokenHash, hash),
@@ -55,8 +65,8 @@ export async function consumePasswordResetToken(token: string) {
         isNull(passwordResetTokens.consumedAt)
       )
     )
-    .limit(1);
-  return record[0];
+    .returning({ id: passwordResetTokens.id, userId: passwordResetTokens.userId });
+  return record;
 }
 
 export const RESET_TOKEN_TTL_MINUTES = RESET_TOKEN_TTL_MS / 60000;

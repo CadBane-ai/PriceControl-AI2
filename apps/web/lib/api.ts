@@ -44,7 +44,17 @@ export class ApiClient {
       cache: "no-store",
       body: JSON.stringify({ token, password }),
     })
-    if (!res.ok && res.status !== 204) {
+    if (res.status === 204) {
+      return
+    }
+
+    if (res.status === 410) {
+      const error = new Error("Reset token expired. Please request a new link.") as Error & { code?: string }
+      error.code = "RESET_TOKEN_EXPIRED"
+      throw error
+    }
+
+    if (!res.ok) {
       throw new Error(`Failed to reset password: ${res.status}`)
     }
   }

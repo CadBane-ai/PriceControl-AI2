@@ -7,7 +7,9 @@
 * **Authentication:** `OPENROUTER_API_KEY` bearer token. Recommended attribution headers: `HTTP-Referer` (site URL) and `X-Title` (app name).
 * **Key Endpoints Used:**
     * `POST /chat/completions` with `stream=true` for streaming responses.
+    * Built-in `web` search plugin enabled via the request `plugins` array with options (`engine`, `max_results`, `search_prompt`, `web_search_options.search_context_size`).
 * **Provider Selection:** Force Cerebras execution with `{ provider: { only: ["Cerebras"] } }`.
+* **Governed Web Access:** Returned web results must be filtered against `/datasources.yml` before being forwarded to the LLM; disallowed domains trigger a structured error back to the client.
 
 ## Future: Direct Cerebras API
 * **Purpose:** Scale-up option to call Cerebras directly when needed.

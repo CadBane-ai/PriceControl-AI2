@@ -69,15 +69,15 @@ export interface Message {
 ```
 
 ## ToolCallLog
-* **Purpose:** To create an immutable audit trail of every time the AI assistant uses a tool (e.g., `web.fetch`). This is critical for compliance with data source terms, debugging issues, and ensuring the data governance rules are being followed.
+* **Purpose:** To create an immutable audit trail of every time the AI assistant triggers an external capability (e.g., the OpenRouter `web` search plugin). This is critical for compliance with data source terms, debugging issues, and ensuring the data governance rules are being followed.
 * **Relationships:** A `Message` from the assistant can be associated with one or more `ToolCallLogs`. Each log is also linked to the `User` and `Conversation` for easy querying.
 * **Key Attributes:**
     * `id`: `string` - A unique identifier for the log entry.
     * `conversationId`: `string` - Foreign key linking to the `Conversation`.
-    * `toolName`: `string` - The name of the tool that was called (e.g., 'web.fetch').
-    * `toolInput`: `json` - The parameters the LLM passed to the tool.
-    * `status`: `enum ('success' | 'failure')` - Indicates if the tool executed successfully.
-    * `createdAt`: `Date` - Timestamp of when the tool call occurred.
+    * `toolName`: `string` - The capability that was invoked (e.g., `'web'`).
+    * `toolInput`: `json` - The parameters passed to the plugin (engine, max_results, search prompt) plus any allow/deny metadata captured by the gateway.
+    * `status`: `enum ('success' | 'failure')` - Indicates if the plugin execution completed successfully after governance checks.
+    * `createdAt`: `Date` - Timestamp of when the plugin call occurred.
 ### TypeScript Interface
 ```typescript
 import type { Conversation } from './conversation';

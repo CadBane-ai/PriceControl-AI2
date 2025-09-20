@@ -197,11 +197,36 @@ paths:
                 conversationId:
                   type: string
                   description: Optional conversation context ID (future persistence hook)
+                webSearch:
+                  type: object
+                  description: Optional overrides for governed OpenRouter web search plugin usage
+                  properties:
+                    enabled:
+                      type: boolean
+                      description: Flag to request governed web access for this turn (default false)
+                    engine:
+                      type: string
+                      enum: [native, exa]
+                      description: Preferred OpenRouter search engine; native falls back to Exa automatically when unsupported
+                    maxResults:
+                      type: integer
+                      minimum: 1
+                      maximum: 10
+                      description: Limits the number of search snippets requested from OpenRouter (defaults to 5)
+                    searchPrompt:
+                      type: string
+                      description: Custom prompt prefix for the search results block (defaults to provider baseline)
+                    searchContextSize:
+                      type: string
+                      enum: [low, medium, high]
+                      description: Controls the `web_search_options.search_context_size` value passed to OpenRouter
       responses:
         '200':
           description: "Streams a text/plain token feed that the client renders incrementally."
           content:
             text/plain: {}
+        '400':
+          description: "Governance rejection (no allow-listed sources or invalid web search request)."
         '401':
           description: "Missing or invalid NextAuth session."
         '502':

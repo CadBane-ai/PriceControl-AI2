@@ -66,13 +66,27 @@ export const OPENROUTER_MODEL_GROUPS: ModelGroup[] = [
   },
 ]
 
+const OPENROUTER_MODEL_LOOKUP = new Map<string, ModelOption>()
+
+for (const group of OPENROUTER_MODEL_GROUPS) {
+  for (const option of group.options) {
+    OPENROUTER_MODEL_LOOKUP.set(option.id, option)
+  }
+}
+
 export function findOptionById(id?: string): ModelOption | undefined {
   if (!id) return undefined
-  for (const g of OPENROUTER_MODEL_GROUPS) {
-    const found = g.options.find((o) => o.id === id)
-    if (found) return found
-  }
-  return undefined
+  return OPENROUTER_MODEL_LOOKUP.get(id)
+}
+
+export const OPENROUTER_MODEL_IDS = Array.from(OPENROUTER_MODEL_LOOKUP.keys())
+
+export function isModelIdAllowed(id?: string): boolean {
+  return typeof id === "string" && OPENROUTER_MODEL_LOOKUP.has(id)
+}
+
+export function inferModeFromModelId(id?: string): ChatMode | undefined {
+  return id ? OPENROUTER_MODEL_LOOKUP.get(id)?.mode : undefined
 }
 
 const DEFAULT_INSTRUCT_MODEL_ID = "meta-llama/llama-3.3-8b-instruct"

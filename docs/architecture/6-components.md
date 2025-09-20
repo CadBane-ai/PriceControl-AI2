@@ -81,10 +81,10 @@ graph TD
 * **Technology Stack:** Drizzle ORM `~0.30`, Neon Serverless Driver, Postgres `16`.
 
 ### LLM Gateway Service
-* **Responsibility:** Dedicated and secure interface between our app and the LLM provider. Initially integrates with OpenRouter to access Cerebras-hosted models; structured to support direct Cerebras API later. Loads prompts, constructs requests, defines tools, and enforces data-source governance (`/datasources.yml`).
-* **Key Interfaces:** Streams responses to the API Layer from `/api/ai`. Accepts `messages`, optional `mode`, and explicit `model` (OpenRouter model ID). Returns a readable token stream.
-* **Dependencies:** Depends on OpenRouter (Cerebras provider) for inference today; later, may call Cerebras API directly. Depends on Data Persistence for conversation/message storage and tool-call audit logs (future stories).
-* **Technology Stack:** TypeScript, Vercel AI SDK (OpenAIStream/StreamingTextResponse), Zod (validation).
+* **Responsibility:** Dedicated and secure interface between our app and the LLM provider. Initially integrates with OpenRouter to access Cerebras-hosted models; structured to support direct Cerebras API later. Loads prompts, constructs requests (including the OpenRouter `web` plugin configuration), and enforces data-source governance (`/datasources.yml`) by filtering plugin results before they reach the model.
+* **Key Interfaces:** Streams responses to the API Layer from `/api/ai`. Accepts `messages`, optional `mode`, and explicit `model` (OpenRouter model ID). Returns a readable token stream. When web access is requested it submits `plugins: [{ id: 'web', engine, max_results, search_prompt, web_search_options }]` to OpenRouter, consumes the streamed search payload, and forwards only allow-listed snippets back upstream.
+* **Dependencies:** Depends on OpenRouter (Cerebras provider) for inference today; later, may call Cerebras API directly. Depends on the Transparency Service for allow-list validation, and on Data Persistence for conversation/message storage plus plugin-call audit logs (future stories).
+* **Technology Stack:** TypeScript, Vercel AI SDK (OpenAIStream/StreamingTextResponse), Zod (validation), OpenRouter Web Search parameters.
 
 ### Usage Service
 * **Responsibility:** Track per-user chat consumption for freemium gating and surface usage summaries to the UI. Coordinates with the LLM Gateway to increment counters, enforces daily limits, and returns aggregated usage metrics for the dashboard badge.
@@ -95,9 +95,9 @@ graph TD
 * **Technology Stack:** Next.js API routes, Upstash Redis REST API, TypeScript business logic, Zod validation.
 
 ### Transparency Service (Data Source Registry)
-* **Responsibility:** Surface the governed data-source registry to both the AI tools and the UI. Ensures `/datasources.yml` is parsed, cached, and available for validation and display.
+* **Responsibility:** Surface the governed data-source registry to both the AI tooling pipeline and the UI. Ensures `/datasources.yml` is parsed, cached, and available for validation, display, and domain-to-source resolution.
 * **Key Interfaces:**
-  * Provides `isAllowedSource(sourceId)` guard used by the LLM Gateway prior to invoking `web.fetch`.
+  * Provides helpers such as `isAllowedSource(sourceId)` and `resolveDomain(domain)` that the LLM Gateway uses to vet OpenRouter `web` plugin results, returning both allow/deny decisions and normalized source metadata.
   * `GET /api/datasources` exposes the parsed registry to the Data Sources Directory UI with categories, cadence, and policy metadata.
 * **Dependencies:** Reads from the repo-level `datasources.yml`, caches parsed content in memory (and optionally in Redis) with change detection, and shares utility functions with the governance checks in the LLM Gateway.
 * **Technology Stack:** TypeScript parser for YAML (`yaml` package), shared governance utilities, caching via in-process memoization or Redis, shadcn/ui table components on the frontend.

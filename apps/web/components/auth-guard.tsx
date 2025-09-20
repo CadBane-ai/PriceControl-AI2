@@ -18,7 +18,9 @@ export function AuthGuard({ children, allowBypass = false }: AuthGuardProps) {
 
   useEffect(() => {
     if (status === "unauthenticated" && !allowBypass) {
-      router.push("/login")
+      const nextPath = typeof window !== "undefined" ? `${window.location.pathname}${window.location.search}` : ""
+      const loginTarget = nextPath && nextPath !== "/" ? `/login?next=${encodeURIComponent(nextPath)}` : "/login"
+      router.replace(loginTarget)
     }
   }, [status, allowBypass, router])
 

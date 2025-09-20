@@ -1,16 +1,17 @@
-import { pgEnum, pgTable, uuid, varchar, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, uuid, varchar, text, timestamp, pgEnum, integer } from "drizzle-orm/pg-core";
 
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["free", "pro"]);
 
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
+  id: uuid("id").defaultRandom().primaryKey(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
   passwordHash: text("password_hash").notNull(),
   stripeCustomerId: text("stripe_customer_id"),
-  subscriptionStatus: subscriptionStatusEnum("subscription_status").notNull().default("free"),
+  subscriptionStatus: subscriptionStatusEnum("subscription_status").default("free").notNull(),
   planExpiresAt: timestamp("plan_expires_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  sessionVersion: integer("session_version").notNull().default(1),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
 export type User = typeof users.$inferSelect;

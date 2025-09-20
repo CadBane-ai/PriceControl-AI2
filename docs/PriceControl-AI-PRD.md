@@ -31,7 +31,7 @@ The core of the solution is an open-source LLM whose data access is strictly gov
 2.  **FR2: Subscription Management:** Users on the free tier shall be presented with an option to upgrade. This option will direct them to a Stripe Checkout page. Paying users shall be able to manage their subscription via a Stripe Customer Portal.
 3.  **FR3: Core Chat Functionality:** The system shall provide a chat interface where users can submit text-based queries and receive streaming text responses from the LLM.
 4.  **FR4: Dual Model Selection:** The chat interface shall allow users to select between the default "Instruct" model and the "Thinking" model for their query.
-5.  **FR5: Governed Web Access:** When a user's query requires internet access, the LLM's tools (`web.fetch`) must only retrieve information from sources defined in the `/datasources.yml` allow-list. The system must not access any unlisted sources.
+5.  **FR5: Governed Web Access:** When a user's query requires internet access, the platform must enable OpenRouter's built-in `web` search plugin via the request `plugins` parameter and only surface results whose domains appear in the `/datasources.yml` allow-list. Any result referencing an unlisted source must be rejected and logged.
 6.  **FR6: Freemium Usage Gating:** The system shall enforce a usage limit (e.g., number of daily queries) on users in the free tier.
 7.  **FR7: System Scalability:** The system shall be architected to scale and support at least 1,000 monthly active users without degradation in performance, leveraging the serverless capabilities of Vercel and Neon.
 8.  **FR8: System Health Monitoring:** The system shall provide a health-check API endpoint that reports key metrics (e.g., database connectivity, response latency) to allow for automated monitoring of system scalability and performance.
@@ -235,18 +235,17 @@ The UX vision is to create a clean, data-dense, and highly efficient interface t
 3.  The backend API uses the `mode` parameter to call the correct model configured for Together.ai.
 4.  The chat interface visually indicates which model is currently active.
 
-### Story 2.5: Implement Data Source Registry & Governed `web.fetch` Tool
+### Story 2.5: Implement Data Source Registry & Governed OpenRouter Web Search
 * **As a** developer,
-* **I want** to create the data governance layer and a secure web-fetching tool,
-* **so that** all LLM internet access is strictly controlled and transparent.
+* **I want** to create the data governance layer and configure OpenRouter's native web search plugin,
+* **so that** all LLM internet access is strictly controlled, auditable, and aligned with our approved sources.
 
 **Acceptance Criteria:**
-1.  A `/datasources.yml` file is created and parsable by the backend.
-2.  A server-side guard function (e.g., `isAllowedSource`) is implemented to check if a source ID is in the registry.
-3.  An LLM tool named `web.fetch` is created.
-4.  The `web.fetch` tool, before accessing any URL, MUST call the guard function to verify the source is on the allow-list.
-5.  The tool successfully fetches content from an allowed source.
-6.  The tool returns an error and does NOT fetch content from a disallowed source.
+1.  A `/datasources.yml` file is created, parsable by the backend, and captures the allow-listed domains with human-readable metadata.
+2.  A server-side guard function (e.g., `isAllowedSource`) validates a requested source or domain against the registry and exposes helpers for mapping OpenRouter search results back to registry entries.
+3.  The `/api/ai/route.ts` pipeline configures OpenRouter requests to include the built-in `web` plugin (via the `plugins` array) and honours documented options such as `engine`, `max_results`, `search_prompt`, and `web_search_options.search_context_size`.
+4.  When OpenRouter returns web search results, the service filters out responses whose domains are not present in `/datasources.yml`, emits a structured error, and prevents those snippets from being passed to the LLM.
+5.  When at least one allowed source is returned, the service provides normalized result metadata (title, URL, snippet, source ID) that downstream stories can cite.
 
 ### Story 2.6: Integrate Tools with LLM and Provide Source Citations
 * **As a** user,
@@ -254,9 +253,9 @@ The UX vision is to create a clean, data-dense, and highly efficient interface t
 * **so that** I can trust and verify its answers.
 
 **Acceptance Criteria:**
-1.  The `web.fetch` tool is made available to the LLM in the `/api/ai/route.ts` endpoint.
-2.  A system prompt is loaded from a `/prompts/*.mdx` file and used in the LLM call, instructing the AI to use its tools and cite sources.
-3.  When asked a question that requires current data, the LLM correctly uses the `web.fetch` tool.
+1.  The `/api/ai/route.ts` endpoint conditionally includes the OpenRouter `web` plugin in the request payload when governed web access is required.
+2.  A system prompt is loaded from a `/prompts/*.mdx` file and used in the LLM call, instructing the AI to invoke the web search plugin and cite the vetted sources it returns.
+3.  When asked a question that requires current data, the LLM triggers the `web` plugin and receives only the allow-listed results produced in Story 2.5.
 4.  The final response streamed to the user includes a clear citation of the source ID and/or URL that was used to generate the answer.
 
 ---

@@ -9,7 +9,7 @@ import type { Message } from "@/lib/types"
 interface ChatThreadProps {
   messages: Message[]
   isLoading?: boolean
-  streamingMessage?: string
+  streamingMessage?: Message | null
 }
 
 export function ChatThread({ messages, isLoading = false, streamingMessage }: ChatThreadProps) {
@@ -66,12 +66,7 @@ export function ChatThread({ messages, isLoading = false, streamingMessage }: Ch
         {/* Streaming message */}
         {streamingMessage && (
           <MessageBubble
-            message={{
-              id: "streaming",
-              role: "assistant",
-              content: streamingMessage,
-              createdAt: new Date().toISOString(),
-            }}
+            message={streamingMessage}
             isStreaming={true}
           />
         )}

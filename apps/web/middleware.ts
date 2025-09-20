@@ -15,8 +15,11 @@ export async function middleware(req: NextRequest) {
 
   const token = await getToken({ req });
   if (!token) {
+    const nextDestination = `${pathname}${req.nextUrl.search}`;
     const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("next", pathname);
+    if (nextDestination && nextDestination !== "/") {
+      loginUrl.searchParams.set("next", nextDestination);
+    }
     return NextResponse.redirect(loginUrl);
   }
   return NextResponse.next();
@@ -25,4 +28,3 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: ["/dashboard/:path*", "/account/:path*", "/billing/:path*"],
 };
-

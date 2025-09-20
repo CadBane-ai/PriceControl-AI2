@@ -51,18 +51,17 @@ Architecture Link: See `docs/architecture/19-model-management.md` for how availa
 3.  Selecting a model updates local state and infers the high-level `mode` when the option specifies one, keeping the UI and request payload in sync.
 4.  Every chat submission sends both `mode` and `model` fields to `/api/ai`, ensuring the backend streams from the chosen OpenRouter/Cerebras model.
 
-## Story 2.5: Implement Data Source Registry & Governed `web.fetch` Tool
+## Story 2.5: Implement Data Source Registry & Governed OpenRouter Web Search
 * **As a** developer,
-* **I want** to create the data governance layer and a secure web-fetching tool,
-* **so that** all LLM internet access is strictly controlled and transparent.
+* **I want** to create the data governance layer and configure OpenRouter's native web search plugin,
+* **so that** all LLM internet access is strictly controlled, auditable, and aligned with our approved sources.
 
 **Acceptance Criteria:**
-1.  A `/datasources.yml` file is created and parsable by the backend.
-2.  A server-side guard function (e.g., `isAllowedSource`) is implemented to check if a source ID is in the registry.
-3.  An LLM tool named `web.fetch` is created.
-4.  The `web.fetch` tool, before accessing any URL, MUST call the guard function to verify the source is on the allow-list.
-5.  The tool successfully fetches content from an allowed source.
-6.  The tool returns an error and does NOT fetch content from a disallowed source.
+1.  A `/datasources.yml` file is created, parsable by the backend, and captures the allow-listed domains with human-readable metadata.
+2.  A server-side guard function (e.g., `isAllowedSource`) validates a requested source or domain against the registry and exposes helpers for mapping OpenRouter search results back to registry entries.
+3.  The `/api/ai/route.ts` pipeline configures OpenRouter requests to include the built-in `web` plugin (via the `plugins` array) and honours documented options such as `engine`, `max_results`, `search_prompt`, and `web_search_options.search_context_size`.
+4.  When OpenRouter returns web search results, the service filters out responses whose domains are not present in `/datasources.yml`, emits a structured error, and prevents those snippets from being passed to the LLM.
+5.  When at least one allowed source is returned, the service provides normalized result metadata (title, URL, snippet, source ID) that downstream stories can cite.
 
 ## Story 2.6: Integrate Tools with LLM and Provide Source Citations
 * **As a** user,
@@ -70,9 +69,9 @@ Architecture Link: See `docs/architecture/19-model-management.md` for how availa
 * **so that** I can trust and verify its answers.
 
 **Acceptance Criteria:**
-1.  The `web.fetch` tool is made available to the LLM in the `/api/ai/route.ts` endpoint.
-2.  A system prompt is loaded from a `/prompts/*.mdx` file and used in the LLM call, instructing the AI to use its tools and cite sources.
-3.  When asked a question that requires current data, the LLM correctly uses the `web.fetch` tool.
+1.  The `/api/ai/route.ts` endpoint conditionally includes the OpenRouter `web` plugin in the request payload when governed web access is required.
+2.  A system prompt is loaded from a `/prompts/*.mdx` file and used in the LLM call, instructing the AI to invoke the web search plugin and cite the vetted sources it returns.
+3.  When asked a question that requires current data, the LLM triggers the `web` plugin and receives only the allow-listed results produced in Story 2.5.
 4.  The final response streamed to the user includes a clear citation of the source ID and/or URL that was used to generate the answer.
 
 ---

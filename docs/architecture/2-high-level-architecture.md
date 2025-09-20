@@ -1,7 +1,7 @@
 # 2. High-Level Architecture
 
 ## Technical Summary
-The architecture for PriceControl is a full-stack, type-safe web application built upon the T3 Stack foundation. Core capabilities now include self-service password recovery, governed data-source transparency, freemium usage metering with upgrade nudges, and a complete Stripe subscription loop. The system features a Next.js frontend with serverless API routes deployed on Vercel, a Neon serverless Postgres database with Drizzle ORM for durable persistence, NextAuth.js for authentication, Upstash Redis for short-lived counters, Resend for transactional email, and Stripe for billing. This cohesive stack is designed for rapid development, scalability, and end-to-end type safety, directly supporting the PRD v4 goals of trust, transparency, and monetization.
+The architecture for PriceControl is a full-stack, type-safe web application built upon the T3 Stack foundation. Core capabilities now include self-service password recovery, governed data-source transparency driven by OpenRouter's built-in `web` search plugin, freemium usage metering with upgrade nudges, and a complete Stripe subscription loop. The system features a Next.js frontend with serverless API routes deployed on Vercel, a Neon serverless Postgres database with Drizzle ORM for durable persistence, NextAuth.js for authentication, Upstash Redis for short-lived counters, Resend for transactional email, and Stripe for billing. This cohesive stack is designed for rapid development, scalability, and end-to-end type safety, directly supporting the PRD v4 goals of trust, transparency, and monetization.
 
 ## Platform and Infrastructure Choice
 * **Platform:** Vercel
@@ -56,6 +56,6 @@ graph TD
 * **Serverless Functions:** Using Next.js API Routes deployed as serverless functions on Vercel for all backend logic, including usage metering, Stripe webhooks, and password reset flows.
 * **Component-Based UI:** Using React Server Components (RSC) within the Next.js App Router for an efficient and modern frontend that powers chat, usage badges, pricing, and the data sources directory.
 * **Repository Pattern (via ORM):** Abstracting data access through Drizzle ORM, creating a clean separation between business logic and data persistence while enabling clear audit logs for tool usage and subscription status changes.
-* **Governed Data Access:** Enforcing a centralized allow-list (`datasources.yml`) for all outbound data fetches and exposing the same registry to the UI for transparency.
+* **Governed Data Access:** Enforcing a centralized allow-list (`datasources.yml`) for all outbound data fetches, including filtering OpenRouter `web` plugin results, and exposing the same registry to the UI for transparency.
 
 ---

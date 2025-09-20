@@ -1,69 +1,105 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { Sidebar } from "@/components/dashboard/sidebar"
-import { TopBar } from "@/components/dashboard/top-bar"
-import { ChatThread } from "@/components/chat/chat-thread"
-import { MessageComposer } from "@/components/chat/message-composer"
-import type { ChatState } from "@/lib/types"
-import { OPENROUTER_MODELS, findOptionById } from "@/lib/models"
+import { useCallback, useMemo, useState } from "react"
 import { useChat } from "ai/react"
 
+import { Sidebar } from "@/components/dashboard/sidebar"
+import { ChatThread } from "@/components/chat/chat-thread"
+import { MessageComposer } from "@/components/chat/message-composer"
+import type { Message } from "@/lib/types"
+import { ModelPicker } from "@/components/chat/model-picker"
+import { inferModeFromModelId, OPENROUTER_MODELS, type ChatMode } from "@/lib/models"
+
+const STATIC_TRANSCRIPT: Message[] = [
+  {
+    id: "assistant-1",
+    role: "assistant",
+    content: "Welcome to PriceControl AI. Ask about your portfolio, market trends, or macro insights to get started.",
+  },
+]
+
+const DEFAULT_MODEL_ID = OPENROUTER_MODELS.instruct.id
+const DEFAULT_MODE: ChatMode = inferModeFromModelId(DEFAULT_MODEL_ID) ?? "instruct"
+
 export default function DashboardPage() {
-  const [chatState, setChatState] = useState<ChatState>({
-    conversationId: null,
-    messages: [],
-    loading: false,
-    model: "instruct",
-    modelId: OPENROUTER_MODELS.instruct.id,
-  })
-  const [streamingMessage] = useState("")
+  const [selectedModelId, setSelectedModelId] = useState(DEFAULT_MODEL_ID)
+  const [mode, setMode] = useState<ChatMode>(DEFAULT_MODE)
 
-  const handleModelChange = (model: "instruct" | "reasoning") => {
-    setChatState((prev) => ({ ...prev, model, modelId: OPENROUTER_MODELS[model].id }))
-  }
+  const handleModelSelect = useCallback((modelId: string) => {
+    setSelectedModelId(modelId)
+    setMode((previous) => inferModeFromModelId(modelId) ?? previous ?? DEFAULT_MODE)
+  }, [])
 
-  const handleModelIdChange = (modelId: string) => {
-    // Infer mode from modelId if it matches known entries; default to instruct
-    const opt = findOptionById(modelId)
-    const mode = opt?.mode as "instruct" | "reasoning" | undefined
-    setChatState((prev) => ({ ...prev, model: mode ?? prev.model, modelId }))
-  }
-  // useChat manages message state and streaming to /api/ai (Story 2.3)
-  const { messages, isLoading, append } = useChat({ api: "/api/ai", body: { model: chatState.modelId, mode: chatState.model } })
+  const chatConfig = useMemo(
+    () => ({
+      initialMessages: STATIC_TRANSCRIPT,
+      api: "/api/ai",
+      body: {
+        model: selectedModelId,
+        mode,
+      },
+    }),
+    [mode, selectedModelId],
+  )
 
-  const mappedMessages = useMemo(() => {
-    return messages.map((m, idx) => ({
-      id: m.id ?? String(idx),
-      role: m.role as "user" | "assistant",
-      content: m.content,
-      createdAt: new Date().toISOString(),
-    }))
-  }, [messages])
+  const {
+    messages,
+    input,
+    handleInputChange,
+    handleSubmit,
+    isLoading,
+    error,
+  } = useChat(chatConfig)
 
+  const streamingMessage = useMemo(() => {
+    const lastMessage = messages[messages.length - 1]
+    if (isLoading && lastMessage?.role === "assistant") {
+      return lastMessage
+    }
+    return null
+  }, [messages, isLoading])
+
+  const orderedMessages = useMemo(() => {
+    return messages
+      .filter((msg) => msg.id !== streamingMessage?.id)
+      .sort((a, b) => (a.createdAt && b.createdAt) ? a.createdAt.getTime() - b.createdAt.getTime() : 0)
+  }, [messages, streamingMessage])
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Sidebar */}
       <Sidebar />
 
-      {/* Main Content */}
       <div className="flex flex-1 flex-col md:ml-64">
-        <TopBar modelId={chatState.modelId!} onModelIdChange={handleModelIdChange} />
+        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex h-14 items-center justify-between px-4 md:px-6">
+            <div>
+              <h1 className="text-lg font-semibold">Chat</h1>
+              <p className="text-sm text-muted-foreground">
+                Preview the upcoming PriceControl AI assistant experience.
+              </p>
+            </div>
+            <ModelPicker selectedModelId={selectedModelId} mode={mode} onSelect={handleModelSelect} />
+          </div>
+        </header>
 
         <main className="flex-1 overflow-hidden">
-          <div className="h-full flex flex-col">
-            {/* Chat Thread (scrollable area) */}
-            <ChatThread messages={mappedMessages} isLoading={isLoading} streamingMessage={streamingMessage} />
-
-            {/* Message Composer wired to /api/ai via useChat (Story 2.3) */}
+          <div className="flex h-full flex-col">
+            <ChatThread
+              messages={orderedMessages}
+              isLoading={isLoading && !streamingMessage}
+              streamingMessage={streamingMessage}
+            />
             <MessageComposer
-              onSendMessage={(content) => {
-                // Keep model selection local for 2.3; not sent yet (2.4)
-                append({ role: "user", content })
-              }}
-              disabled={isLoading}
-              placeholder="Ask about market trends, portfolio analysis, or financial insights..."
+              input={input}
+              onInputChange={handleInputChange}
+              onSendMessage={handleSubmit}
+              isLoading={isLoading}
+              placeholder="Message PriceControl AI..."
+              statusMessage={
+                error
+                  ? "An error occurred. Please try again."
+                  : "Chat is in preview mode. Responses are simulated."
+              }
             />
           </div>
         </main>

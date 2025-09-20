@@ -43,6 +43,7 @@ vi.mock("bcryptjs", () => ({
 describe("POST /api/auth/forgot-password", () => {
   beforeEach(() => {
     vi.resetModules()
+    mocks.enforceRateLimit.mockReset()
     mocks.enforceRateLimit.mockResolvedValue({ success: true })
     mocks.findUserByEmail.mockReset()
     mocks.createPasswordResetToken.mockReset()
@@ -99,6 +100,7 @@ describe("POST /api/auth/forgot-password", () => {
 describe("POST /api/auth/reset-password", () => {
   beforeEach(() => {
     vi.resetModules()
+    mocks.enforceRateLimit.mockReset()
     mocks.enforceRateLimit.mockResolvedValue({ success: true })
     mocks.consumePasswordResetToken.mockReset()
   })
@@ -119,6 +121,9 @@ describe("POST /api/auth/reset-password", () => {
     })
     const res = await mod.POST(req)
     expect(res.status).toBe(410)
+    expect(mocks.enforceRateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "password-reset:invalid-token:hash:bad" }),
+    )
   })
 
   it("returns 204 when password reset succeeds", async () => {
@@ -132,6 +137,24 @@ describe("POST /api/auth/reset-password", () => {
     expect(res.status).toBe(204)
   })
 
+  it("clears auth cookies when resetting password", async () => {
+    mocks.consumePasswordResetToken.mockResolvedValue({ id: "token-1", userId: "user-1" })
+    const mod = await import("@/app/api/auth/reset-password/route")
+    const req = new Request("http://localhost/api/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token: "good", password: "newpassword123" }),
+    })
+    const res = await mod.POST(req)
+    const clearedCookies = res.cookies.getAll().map((cookie) => ({ name: cookie.name, value: cookie.value }))
+    expect(clearedCookies).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "next-auth.session-token", value: "" }),
+        expect.objectContaining({ name: "__Secure-next-auth.session-token", value: "" }),
+        expect.objectContaining({ name: "__Host-next-auth.session-token", value: "" }),
+      ]),
+    )
+  })
+
   it("returns 429 when limit exceeded", async () => {
     mocks.enforceRateLimit.mockResolvedValueOnce({ success: false })
     const mod = await import("@/app/api/auth/reset-password/route")
@@ -141,5 +164,26 @@ describe("POST /api/auth/reset-password", () => {
     })
     const res = await mod.POST(req)
     expect(res.status).toBe(429)
+  })
+
+  it("prevents reuse of consumed tokens", async () => {
+    mocks.consumePasswordResetToken
+      .mockResolvedValueOnce({ id: "token-1", userId: "user-1" })
+      .mockResolvedValueOnce(undefined)
+    const mod = await import("@/app/api/auth/reset-password/route")
+
+    const baseRequestInit = {
+      method: "POST",
+      body: JSON.stringify({ token: "reused", password: "newpassword123" }),
+    }
+
+    const first = await mod.POST(new Request("http://localhost/api/auth/reset-password", baseRequestInit))
+    expect(first.status).toBe(204)
+
+    const second = await mod.POST(new Request("http://localhost/api/auth/reset-password", baseRequestInit))
+    expect(second.status).toBe(410)
+    expect(mocks.enforceRateLimit).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "password-reset:invalid-token:hash:reused" }),
+    )
   })
 })

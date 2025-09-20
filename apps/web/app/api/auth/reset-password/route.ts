@@ -6,7 +6,7 @@ import { enforceRateLimit } from "@/lib/rate-limit";
 import { db } from "@/db/client";
 import { passwordResetTokens } from "@/db/schema/password-reset-tokens";
 import { users } from "@/db/schema/users";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 
 const ResetSchema = z.object({
   token: z.string().min(1),
@@ -29,6 +29,8 @@ function getClientIp(req: Request): string {
   return parts[0]?.trim() || "unknown";
 }
 
+class InvalidResetTokenError extends Error {}
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -49,36 +51,44 @@ export async function POST(req: Request) {
   }
 
   const { token, password } = parsed.data;
-  const record = await consumePasswordResetToken(token);
-
-  if (!record) {
-    await enforceRateLimit({ key: `password-reset:invalid-token:${hashToken(token)}`, limit: 5, windowSeconds: IP_LIMIT_WINDOW });
-    return NextResponse.json({ error: "Token expired or invalid" }, { status: 410, headers: CACHE_HEADERS });
-  }
-
-  const passwordHash = await bcrypt.hash(password, 10);
+  const tokenHash = hashToken(token);
   const now = new Date();
 
   try {
     await db.transaction(async (tx) => {
-      await tx
-        .update(users)
-        .set({ passwordHash, updatedAt: now })
-        .where(eq(users.id, record.userId));
+      const record = await consumePasswordResetToken(token, tx, tokenHash);
+      if (!record) {
+        throw new InvalidResetTokenError();
+      }
+
+      const passwordHash = await bcrypt.hash(password, 10);
 
       await tx
-        .update(passwordResetTokens)
-        .set({ consumedAt: now })
-        .where(eq(passwordResetTokens.id, record.id));
+        .update(users)
+        .set({ passwordHash, updatedAt: now, sessionVersion: sql`${users.sessionVersion} + 1` })
+        .where(eq(users.id, record.userId));
 
       await tx
         .delete(passwordResetTokens)
         .where(and(eq(passwordResetTokens.userId, record.userId), isNull(passwordResetTokens.consumedAt)));
     });
   } catch (error) {
+    if (error instanceof InvalidResetTokenError) {
+      await enforceRateLimit({ key: `password-reset:invalid-token:${tokenHash}`, limit: 5, windowSeconds: IP_LIMIT_WINDOW });
+      return NextResponse.json({ error: "Token expired or invalid" }, { status: 410, headers: CACHE_HEADERS });
+    }
     console.error("Failed to reset password", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500, headers: CACHE_HEADERS });
   }
 
-  return new NextResponse(null, { status: 204, headers: CACHE_HEADERS });
+  const response = new NextResponse(null, { status: 204, headers: CACHE_HEADERS });
+  const sessionCookies = [
+    "next-auth.session-token",
+    "__Secure-next-auth.session-token",
+    "__Host-next-auth.session-token",
+  ];
+  for (const name of sessionCookies) {
+    response.cookies.delete(name, { path: "/" });
+  }
+  return response;
 }

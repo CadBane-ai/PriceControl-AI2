@@ -146,7 +146,7 @@ sequenceDiagram
     end
 ```
 
-## AI Chat Query with Tool Use (OpenRouter -> Cerebras)
+## AI Chat Query with Governed Web Search (OpenRouter -> Cerebras)
 ```mermaid
 sequenceDiagram
     participant User
@@ -154,26 +154,28 @@ sequenceDiagram
     participant APILayer as API Layer
     participant LLMGateway as LLM Gateway
     participant OpenRouter as OpenRouter (Cerebras)
-    participant Tool as Governed Tool (web.fetch)
-    participant DataAPI as External Data API
+    participant Transparency as Transparency Service
     participant AuditLog as Data Persistence
 
     User->>WebUI: Submits query
     WebUI->>APILayer: POST /api/ai (messages, model, mode)
     APILayer->>LLMGateway: ProcessRequest(messages)
-    LLMGateway->>OpenRouter: POST /chat/completions (stream=true)
-    OpenRouter-->>LLMGateway: Tool call request (future)
-    LLMGateway->>Tool: Validate & Execute(params)
-    Tool-->>Tool: Check source against allow-list
-    Tool->>DataAPI: Fetch data
-    LLMGateway->>AuditLog: Create ToolCallLog entry
-    DataAPI-->>Tool: Return financial data
-    Tool-->>LLMGateway: Return formatted data
-    LLMGateway->>OpenRouter: Provide tool output
-    OpenRouter-->>LLMGateway: Stream synthesized answer
-    LLMGateway-->>APILayer: Stream response
-    APILayer-->>WebUI: Stream response
-    WebUI-->>User: Display streaming answer & citation
+    LLMGateway->>OpenRouter: POST /chat/completions (stream=true, plugins: web)
+    OpenRouter-->>LLMGateway: Stream web plugin payload (results + metadata)
+    LLMGateway->>Transparency: ValidateResults(domains)
+    Transparency-->>LLMGateway: Allowed sources + denied list
+    LLMGateway->>AuditLog: Create ToolCallLog entry (plugin config, allow/deny)
+    alt One or more allowed sources
+        LLMGateway->>OpenRouter: Provide filtered snippets + source IDs
+        OpenRouter-->>LLMGateway: Stream synthesized answer with citations
+        LLMGateway-->>APILayer: Stream response
+        APILayer-->>WebUI: Stream response
+        WebUI-->>User: Display streaming answer & citations
+    else No allowed sources
+        LLMGateway-->>APILayer: Reject request (no governed sources)
+        APILayer-->>WebUI: 400 + governance error message
+        WebUI-->>User: Surface governed access violation
+    end
 ```
 
 ## Conversation Management (Create / Switch / Rename)

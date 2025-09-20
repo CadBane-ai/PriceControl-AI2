@@ -1,0 +1,16 @@
+# <!-- Powered by BMAD™ Core -->
+schema: 1
+story: "1.6"
+story_title: "Connect UI to Auth & Protect Routes"
+gate: "PASS"
+status_reason: "Login card now hides the Google provider button when unavailable and surfaces guidance; Story 1.6 AC5 satisfied."
+reviewer: "Quinn (Test Architect)"
+updated: "$timestamp"
+waiver: { active: false }
+top_issues: []
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor:
+      - "If providers fetch fails entirely we currently hide Google silently; consider UX messaging in future iteration."

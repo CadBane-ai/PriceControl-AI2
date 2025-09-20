@@ -100,6 +100,11 @@ The application uses a mock API client (`lib/api.ts`) that simulates real backen
 3. Implement proper authentication token handling
 4. Add error handling for network requests
 
+### Authentication API Routes
+- `POST /api/auth/register` accepts `{ "email": string, "password": string }` and returns `201` with `{ user: { id, email } }` when a new account is created.
+- Returns `409` when the email already exists and `400` for invalid payloads.
+- Passwords are hashed with `bcryptjs` before being stored in the database.
+
 ## Environment Variables
 
 Use a local dotenv file. Copy `.env.example` to `.env.local` and fill values. Next.js automatically loads `.env.local` in development.
@@ -122,8 +127,10 @@ Optional feature toggles:
 NEXT_PUBLIC_API_URL=your-api-url
 
 # LLM via OpenRouter (enable to replace the mock stream)
+# Get your key from https://openrouter.ai/keys
 OPENROUTER_API_KEY=your-openrouter-key
-# Optional overrides
+
+# Optional OpenRouter overrides
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 OPENROUTER_SITE_URL=http://localhost:3000
 OPENROUTER_APP_NAME=PriceControl

@@ -2,37 +2,35 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Send, Loader2 } from "lucide-react"
 
 interface MessageComposerProps {
-  onSendMessage: (content: string) => void
-  disabled?: boolean
+  input: string
+  onInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
+  onSendMessage: (e: React.FormEvent<HTMLFormElement>) => void
+  isLoading?: boolean
   placeholder?: string
+  statusMessage?: string
 }
 
 export function MessageComposer({
+  input,
+  onInputChange,
   onSendMessage,
-  disabled = false,
+  isLoading = false,
   placeholder = "Ask about market trends, portfolio analysis, or financial insights...",
+  statusMessage,
 }: MessageComposerProps) {
-  const [message, setMessage] = useState("")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (message.trim() && !disabled) {
-      onSendMessage(message.trim())
-      setMessage("")
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      handleSubmit(e)
+      // The form submission will trigger onSendMessage
+      textareaRef.current?.form?.requestSubmit()
     }
   }
 
@@ -43,19 +41,19 @@ export function MessageComposer({
       textarea.style.height = "auto"
       textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`
     }
-  }, [message])
+  }, [input])
 
   return (
     <div className="border-t bg-background p-4 pb-safe-area-inset-bottom md:pb-4 sticky bottom-0">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={onSendMessage} className="flex gap-2">
         <div className="flex-1">
           <Textarea
             ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={input}
+            onChange={onInputChange}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            disabled={disabled}
+            disabled={isLoading}
             className="h-11 max-h-[120px] resize-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0"
             rows={1}
             aria-label="Message input"
@@ -63,17 +61,23 @@ export function MessageComposer({
         </div>
         <Button
           type="submit"
-          disabled={disabled || !message.trim()}
+          disabled={isLoading || !input.trim()}
           size="icon"
           className="h-11 w-11 flex-shrink-0"
-          aria-label={disabled ? "Sending message" : "Send message"}
+          aria-label={isLoading ? "Sending message" : "Send message"}
         >
-          {disabled ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </Button>
       </form>
       <div className="mt-2 text-xs text-muted-foreground text-center">
-        <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
-        <span className="sm:hidden">Tap to send</span>
+        {statusMessage ? (
+          <span>{statusMessage}</span>
+        ) : (
+          <>
+            <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
+            <span className="sm:hidden">Tap to send</span>
+          </>
+        )}
       </div>
     </div>
   )

@@ -1,13 +1,10 @@
-import type { Config } from "drizzle-kit";
+import { defineConfig } from "drizzle-kit";
 
-export default {
-  schema: "./db/schema/*.ts",
+export default defineConfig({
+  schema: "./db/schema/*",
   out: "./drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    // The CLI reads this at runtime; ensure DATABASE_URL is set when running generate/migrate
-    url: process.env.DATABASE_URL || "",
+    url: process.env.DATABASE_URL!,
   },
-  strict: true,
-} satisfies Config;
-
+});

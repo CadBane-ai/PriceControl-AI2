@@ -18,6 +18,7 @@ import { GoogleSignInButton } from "@/components/auth/google-signin-button"
 export default function ResetPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [token, setToken] = useState<string | null>(null)
+  const [googleAvailable, setGoogleAvailable] = useState<boolean | null>(null)
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -35,6 +36,23 @@ export default function ResetPasswordPage() {
       setToken(tokenParam)
     }
   }, [searchParams, router, toast])
+
+  useEffect(() => {
+    let isMounted = true
+    fetch("/api/auth/providers", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((providers) => {
+        if (!isMounted) return
+        setGoogleAvailable(Boolean(providers?.google))
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setGoogleAvailable(null)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   const {
     register,
@@ -55,7 +73,18 @@ export default function ResetPasswordPage() {
         description: "Your password has been successfully updated.",
       })
       router.push("/login")
-    } catch {
+    } catch (error) {
+      const code = (error as { code?: string } | null)?.code
+      if (code === "RESET_TOKEN_EXPIRED") {
+        toast({
+          title: "Reset link expired",
+          description: "Please request a new password reset link.",
+          variant: "destructive",
+        })
+        router.push("/forgot-password")
+        return
+      }
+
       toast({
         title: "Error",
         description: "Failed to reset password. Please try again.",
@@ -110,7 +139,12 @@ export default function ResetPasswordPage() {
             Back to sign in
           </Link>
           <div>
-            <GoogleSignInButton className="w-full" />
+            {googleAvailable && <GoogleSignInButton className="w-full" />}
+            {googleAvailable === false && (
+              <div className="text-xs text-destructive">
+                Google sign-in is not available. Check GOOGLE_CLIENT_ID/SECRET and restart the server.
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

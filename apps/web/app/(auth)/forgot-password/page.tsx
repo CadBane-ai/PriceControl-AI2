@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
@@ -17,6 +17,7 @@ import { GoogleSignInButton } from "@/components/auth/google-signin-button"
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [googleAvailable, setGoogleAvailable] = useState<boolean | null>(null)
   const { toast } = useToast()
 
   const {
@@ -44,6 +45,23 @@ export default function ForgotPasswordPage() {
     }
   }
 
+  useEffect(() => {
+    let isMounted = true
+    fetch("/api/auth/providers", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((providers) => {
+        if (!isMounted) return
+        setGoogleAvailable(Boolean(providers?.google))
+      })
+      .catch(() => {
+        if (!isMounted) return
+        setGoogleAvailable(null)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   if (isSubmitted) {
     return (
       <Card>
@@ -70,7 +88,12 @@ export default function ForgotPasswordPage() {
                 Back to sign in
               </Link>
             </div>
-            <GoogleSignInButton className="w-full" />
+            {googleAvailable && <GoogleSignInButton className="w-full" />}
+            {googleAvailable === false && (
+              <div className="text-xs text-destructive text-center">
+                Google sign-in is not available. Check GOOGLE_CLIENT_ID/SECRET and restart the server.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -107,7 +130,12 @@ export default function ForgotPasswordPage() {
             Back to sign in
           </Link>
           <div>
-            <GoogleSignInButton className="w-full" />
+            {googleAvailable && <GoogleSignInButton className="w-full" />}
+            {googleAvailable === false && (
+              <div className="text-xs text-destructive">
+                Google sign-in is not available. Check GOOGLE_CLIENT_ID/SECRET and restart the server.
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

@@ -1,0 +1,41 @@
+schema: 1
+story: '2.3'
+story_title: 'Create Backend AI Chat Stream'
+gate: PASS
+status_reason: 'Guardrails reinstated; mode forwarding and usage limits verified by tests.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2025-09-19T00:00:00Z'
+
+top_issues: []
+waiver:
+  active: false
+
+quality_score: 100
+
+evidence:
+  tests_reviewed: 18
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Usage throttling and provider restrictions restored; schema hardened.'
+  performance:
+    status: PASS
+    notes: 'Streaming behaviour matches design; mock fallback remains responsive.'
+  reliability:
+    status: PASS
+    notes: 'Structured 502 handling for upstream faults; deterministic fallback for local work.'
+  maintainability:
+    status: PASS
+    notes: 'Helper utilities reinstated keeping configuration centralized.'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Instrument provider latency and failure metrics for early warning signals.'
+      refs:
+        - apps/web/app/api/ai/route.ts:93

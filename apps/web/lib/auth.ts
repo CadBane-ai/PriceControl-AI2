@@ -29,7 +29,7 @@ const providers = [
       const user = rows[0];
       const ok = await bcrypt.compare(password, user.passwordHash);
       if (!ok) return null;
-      return { id: user.id, email: user.email };
+      return { id: user.id, email: user.email, sessionVersion: user.sessionVersion };
     },
   }),
 ];
@@ -55,41 +55,84 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
-        const u = user as { id?: string; email?: string | null };
+        const u = user as { id?: string; email?: string | null; sessionVersion?: number };
         if (account?.provider === "google") {
           const email = (u.email ?? token.email)?.toLowerCase();
           if (email) {
             const existing = await db
-              .select({ id: users.id })
+              .select({ id: users.id, sessionVersion: users.sessionVersion })
               .from(users)
               .where(eq(users.email, email))
               .limit(1);
 
             let id = existing[0]?.id;
+            let sessionVersion = existing[0]?.sessionVersion;
             if (!id) {
               const inserted = await db
                 .insert(users)
                 .values({ email, passwordHash: "google-oauth" })
-                .returning({ id: users.id });
+                .returning({ id: users.id, sessionVersion: users.sessionVersion });
               id = inserted[0]?.id;
+              sessionVersion = inserted[0]?.sessionVersion;
             }
 
             if (id) {
               token.sub = id;
               token.email = email;
+              token.sessionVersion = sessionVersion ?? token.sessionVersion ?? 1;
+              token.sessionInvalid = false;
             }
           }
         } else {
           token.sub = u.id ?? token.sub;
           token.email = u.email ?? token.email;
+          if (typeof u.sessionVersion === "number") {
+            token.sessionVersion = u.sessionVersion;
+          }
+          token.sessionInvalid = false;
         }
+      }
+
+      if (!user && token.sub) {
+        try {
+          const rows = await db
+            .select({ sessionVersion: users.sessionVersion })
+            .from(users)
+            .where(eq(users.id, token.sub))
+            .limit(1);
+          const currentVersion = rows[0]?.sessionVersion;
+          if (currentVersion === undefined) {
+            token.sessionInvalid = true;
+          } else if (typeof token.sessionVersion === "number" && token.sessionVersion < currentVersion) {
+            token.sessionInvalid = true;
+            token.sessionVersion = currentVersion;
+          } else {
+            token.sessionInvalid = false;
+            token.sessionVersion = token.sessionVersion ?? currentVersion ?? 1;
+          }
+        } catch (error) {
+          console.warn("Failed to verify session version", error);
+          token.sessionInvalid = false;
+        }
+      }
+
+      if (token.sessionInvalid === undefined) {
+        token.sessionInvalid = false;
+      }
+
+      if (!token.sessionVersion) {
+        token.sessionVersion = 1;
       }
       return token;
     },
     async session({ session, token }) {
+      if (token.sessionInvalid) {
+        return null;
+      }
       if (session.user) {
         (session.user as unknown as { id?: string }).id = token.sub;
         session.user.email = token.email as string | undefined;
+        (session.user as unknown as { sessionVersion?: number }).sessionVersion = token.sessionVersion as number | undefined;
       }
       return session;
     },

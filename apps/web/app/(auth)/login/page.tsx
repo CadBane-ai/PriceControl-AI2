@@ -17,7 +17,7 @@ import { Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
-  const [googleAvailable, setGoogleAvailable] = useState(true)
+  const [googleAvailable, setGoogleAvailable] = useState<boolean | null>(null)
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -58,7 +58,7 @@ export default function LoginPage() {
     fetch("/api/auth/providers", { cache: "no-store" })
       .then((r) => r.json())
       .then((providers) => setGoogleAvailable(!!providers?.google))
-      .catch(() => setGoogleAvailable(true))
+      .catch(() => setGoogleAvailable(null))
   }, [])
 
   return (
@@ -109,13 +109,15 @@ export default function LoginPage() {
             <span className="bg-background px-2 text-xs text-muted-foreground relative z-10">or continue with</span>
             <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t" />
           </div>
-          <GoogleSignInButton
-            className="w-full"
-            label="Continue with Google"
-            callbackUrl={searchParams.get("next") ?? "/dashboard"}
-            variant="outline"
-          />
-          {!googleAvailable && (
+          {googleAvailable && (
+            <GoogleSignInButton
+              className="w-full"
+              label="Continue with Google"
+              callbackUrl={searchParams.get("next") ?? "/dashboard"}
+              variant="outline"
+            />
+          )}
+          {googleAvailable === false && (
             <div className="text-xs text-destructive text-center">
               Google sign-in is not available. Check GOOGLE_CLIENT_ID/SECRET and restart the server.
             </div>

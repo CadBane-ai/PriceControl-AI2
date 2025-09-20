@@ -15,5 +15,8 @@
     "start": "pnpm --filter @pricecontrol/web start",
     "lint": "pnpm --filter @pricecontrol/web lint",
     "test": "pnpm --filter @pricecontrol/web test || echo 'tests pending'"
+  },
+  "dependencies": {
+    "openai": "^5.21.0"
   }
 }

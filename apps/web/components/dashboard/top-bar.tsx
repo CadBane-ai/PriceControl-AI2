@@ -25,6 +25,7 @@ import Link from "next/link"
 import { GoogleSignInButton } from "@/components/auth/google-signin-button"
 
 import { OPENROUTER_MODEL_GROUPS } from "@/lib/models"
+import { useToast } from "@/hooks/use-toast"
 
 interface TopBarProps {
   modelId: string
@@ -36,6 +37,7 @@ export function TopBar({ modelId, onModelIdChange }: TopBarProps) {
   const { theme, setTheme } = useTheme()
   const { data: session } = useSession()
   const [menuOpen, setMenuOpen] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     const loadUsage = async () => {
@@ -51,6 +53,7 @@ export function TopBar({ modelId, onModelIdChange }: TopBarProps) {
   }, [])
 
   const handleLogout = () => {
+    toast({ title: "Logged out", description: "You have been signed out." })
     signOut({ callbackUrl: "/login" })
   }
 

@@ -1,0 +1,42 @@
+schema: 1
+story: '2.4'
+story_title: 'Implement Dual-Model Selection'
+gate: PASS
+status_reason: 'Frontend picker and backend validation both satisfy ACs; automated coverage exercises selection flow and Cerebras enforcement.'
+reviewer: 'Quinn (Test Architect)'
+updated: '2025-09-18T10:47:00Z'
+
+top_issues: []
+waiver:
+  active: false
+
+evidence:
+  tests_reviewed: 5
+  risks_identified: 0
+  trace:
+    ac_covered: [1, 2, 3, 4, 5, 6, 7]
+    ac_gaps: []
+
+nfr_validation:
+  security:
+    status: PASS
+    notes: 'Model IDs validated server-side; Cerebras provider constraint preserved.'
+  performance:
+    status: PASS
+    notes: 'Default routing keeps fast model as baseline; reasoning selection explicitly controlled.'
+  reliability:
+    status: PASS
+    notes: 'Fallback logic ensures valid defaults when payload omits model/mode.'
+  maintainability:
+    status: PASS
+    notes: 'Centralized configuration helpers and targeted tests ease future model additions.'
+
+quality_score: 100
+expires: '2025-10-02T10:47:00Z'
+
+recommendations:
+  immediate: []
+  future:
+    - action: 'Instrument `/api/ai` with structured model usage telemetry to observe adoption and detect anomalies.'
+      refs:
+        - apps/web/app/api/ai/route.ts
